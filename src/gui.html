@@ -22,11 +22,11 @@
         position: fixed;
         width: 100%;
         z-index: 1;
-        margin-top: 22px;
+        margin-top: 30px;
         }
 
         #small_tabs .el-tabs__content {
-        padding-top: 60px;
+        padding-top: 65px;
         }
 
         #mark-reference-objects-for-retail .app-header {
@@ -37,44 +37,36 @@
         }
 
     </sly-style>
-<!--    <div class="app-header">-->
-<!--    <el-button type="primary" size="mini">Mark as reference</el-button>-->
-<!--    <el-tabs v-model="state.selectedTab">-->
-<!--        <el-tab-pane label="PRODUCT" name="product">-->
-<!--            <pre>123</pre>-->
-<!--        </el-tab-pane>-->
-<!--        <el-tab-pane label="CATALOG" name="catalog">-->
-<!--            <div style="overflow: scroll;">-->
-<!--                <sly-table id="small_table" :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}" :content="data.catalog"></sly-table>-->
-<!--            </div>-->
-<!--        </el-tab-pane>-->
-<!--    </el-tabs>-->
-
-<!--    <div style="overflow: scroll; max-height: 300px">-->
-<!--        <sly-table id="small_table" :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}" :content="data.catalog"></sly-table>-->
-<!--    </div>-->
     <div class="app-header">
-        <el-button type="primary" size="mini">Mark as reference</el-button>
+        <el-button
+                class="mt5 ml5 mb15"
+                type="primary"
+                size="mini"
+                :disabled="context.figureId === null">
+            Mark as reference
+        </el-button>
     </div>
     <el-tabs id="small_tabs" v-model="state.selectedTab">
-        <el-tab-pane label="PRODUCT" name="product">
+        <el-tab-pane label="PRODUCT" name="product" class="ml5">
             <el-button type="primary" size="mini">123</el-button>
         </el-tab-pane>
-        <el-tab-pane label="CATALOG" name="catalog">
+        <el-tab-pane label="CATALOG" name="catalog" class="ml5">
+            <span slot="label"><i class="zmdi zmdi-view-list-alt"></i> CATALOG</span>
             <sly-table id="small_table"
                        :options="{perPage: state.perPage, pageSizes: [5, 10, 20, 50, 100]}"
                        :content="data.catalog"
                        :key="state.perPage"
             ></sly-table>
         </el-tab-pane>
-        <el-tab-pane label="SETTINGS" name="settings">
+        <el-tab-pane label="SETTINGS" name="settings" class="ml5">
+            <span slot="label"><i class="zmdi zmdi-settings"></i> SETTINGS</span>
             <div class="fflex">
-                <div style="min-width:90px;">Match field: </div>
+                <div style="min-width:100px;">Match field: </div>
                 <el-input v-model="state.fieldName" size="small"></el-input>
             </div>
             <div class="fflex mt5">
-                <div style="min-width:90px;">Match column: </div>
-                <el-select v-model="state.columnName" size="small">
+                <div style="min-width:100px;">Match column:</div>
+                <el-select v-model="state.columnName" filterable size="small">
                     <el-option
                             v-for="item in data.catalog.columns"
                             :key="item"
@@ -84,44 +76,31 @@
                 </el-select>
             </div>
             <div class="fflex mt5">
-                <div style="min-width:90px;">Rows per page: </div>
+                <div style="min-width:100px;">Rows per page:</div>
                 <el-input-number size="small" :min="5" v-model="state.perPage"></el-input-number>
+            </div>
+            <div class="fflex mt5">
+                <div style="min-width:100px;">Target class:</div>
+                <el-select v-model="state.targetClass" filterable size="small">
+                    <el-option
+                            v-for="item in data.objectClasses"
+                            :key="item"
+                            :label="item"
+                            :value="item">
+                    </el-option>
+                </el-select>
+            </div>
+            <div class="fflex mt5">
+                <div style="min-width:100px;">Reference tag:</div>
+                <el-select v-model="state.referenceTag" filterable size="small">
+                    <el-option
+                            v-for="item in data.tags"
+                            :key="item"
+                            :label="item"
+                            :value="item">
+                    </el-option>
+                </el-select>
             </div>
         </el-tab-pane>
     </el-tabs>
-
-    <!--    <div class="fflex" style="align-items: stretch">-->
-    <!--        <sly-card title="Input" style="width: 50%" class="mr15">-->
-    <!--            <sly-field title="" description="Video project">-->
-    <!--                <a slot="title" target="_blank"-->
-    <!--                   :href="`/projects/${data.projectId}/datasets`">{{data.projectName}}</a>-->
-    <!--                <sly-icon slot="icon" :options="{ imageUrl: `${data.projectPreviewUrl}` }"/>-->
-    <!--            </sly-field>-->
-    <!--        </sly-card>-->
-    <!--        <sly-card title="Output" style="width: 50%;">-->
-    <!--            <div v-if="data.started === true && data.progress !== 100">-->
-    <!--                <div>Processing videos: {{data.progressCurrent}} / {{data.progressTotal}}</div>-->
-    <!--                <el-progress :percentage="data.progress"></el-progress>-->
-    <!--            </div>-->
-    <!--            <sly-field v-if="data.progress === 100" title=""-->
-    <!--                       description="Report has been successfully saved">-->
-    <!--                <a slot="title" target="_blank" :href="`${data.reportUrl}`">{{data.reportName}}</a>-->
-    <!--                <sly-icon slot="icon" :options="{ color: '#33c94c', bgColor: '#d9f7e4', rounded: false }">-->
-    <!--                    <i class="zmdi zmdi-receipt"></i>-->
-    <!--                </sly-icon>-->
-    <!--            </sly-field>-->
-    <!--        </sly-card>-->
-    <!--    </div>-->
-
-    <!--    <sly-card class="mt15"-->
-    <!--              title="Quantitative stats for video objects"-->
-    <!--              subtitle="for every class / for every dataset / for entire project"-->
-    <!--              style="min-height: 200px;"-->
-    <!--    >-->
-    <!--        <sly-table v-loading="data.loading"-->
-    <!--                   element-loading-text="Calculating ..."-->
-    <!--                   :options="{perPage: 50, pageSizes: [10, 20, 50, 100], fixColumns: 2}"-->
-    <!--                   :content="data.table">-->
-    <!--        </sly-table>-->
-    <!--    </sly-card>-->
 </div>

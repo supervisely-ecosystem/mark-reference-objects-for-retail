@@ -8,13 +8,17 @@ import supervisely_lib as sly
 my_app = sly.AppService()
 TEAM_ID = int(os.environ['context.teamId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
-CATALOG_PATH = os.environ['modal.state.catalogPath']
+PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
 
+CATALOG_PATH = os.environ['modal.state.catalogPath']
 FIELD_NAME = os.environ['modal.state.fieldName']
 COLUMN_NAME = os.environ['modal.state.columnName']
 
+PROJECT = None
+META = None
 CATALOG_DF = None
 CATALOG_INDEX = None
+
 
 
 def build_catalog_index():
@@ -30,7 +34,7 @@ def build_catalog_index():
 @my_app.callback("init_catalog")
 @sly.timeit
 def init_catalog(api: sly.Api, task_id, context, state, app_logger):
-    global CATALOG_DF
+    global CATALOG_DF, META, PROJECT
     local_path = os.path.join(my_app.data_dir, CATALOG_PATH.lstrip("/"))
     api.file.download(TEAM_ID, CATALOG_PATH, local_path)
     CATALOG_DF = pd.read_csv(local_path)
@@ -39,8 +43,30 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
         raise KeyError(f"Column {COLUMN_NAME} not found in CSV columns: {CATALOG_DF.columns}")
     build_catalog_index()
 
+    PROJECT = api.project.get_meta(PROJECT_ID)
+
+    meta_json = api.project.get_meta(PROJECT_ID)
+    META = sly.ProjectMeta.from_json(meta_json)
+    if len(META.obj_classes) == 0:
+        raise RuntimeError(f"Project {PROJECT.name} doesn't have classes")
+
+    class_names = []
+    for obj_class in META.obj_classes:
+        class_names.append(obj_class.name)
+    tag_names = []
+    for tag_meta in META.tag_metas:
+        tag_meta: sly.TagMeta
+        if tag_meta.value_type == sly.TagValueType.NONE:
+            tag_names.append(tag_meta.name)
+    if len(META.tag_metas) == 0:
+        raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
+
     fields = [
-        {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))}
+        {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))},
+        {"field": "data.objectClasses", "payload": class_names},
+        {"field": "state.targetClass", "payload": class_names[0]},
+        {"field": "data.tags", "payload": tag_names},
+        {"field": "state.referenceTag", "payload": tag_names[0]},
     ]
     api.app.set_fields(task_id, fields)
 
@@ -61,6 +87,7 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     # pprint.pprint(state)
     pass
 
+
 def main():
     sly.logger.info("Script arguments", extra={
         "TEAM_ID": TEAM_ID,
@@ -70,14 +97,18 @@ def main():
 
     data = {}
     state = {}
+
     data["catalog"] = {"columns": [], "data": []}
     state["selectedTab"] = "product"
     state["fieldName"] = FIELD_NAME
     state["columnName"] = COLUMN_NAME
     state["perPage"] = 7
+    state["targetClass"] = ""
+    state["objectClasses"] = []
     my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
 
-
+# classId - multiselect mark
+#@TODO: check project from context in HTML?
 #@TODO: FOR debug randomize image metadata field value, then implement using real fields
 #@TODO: create tag if not exists
 #@TODO: support multiple-select object
