@@ -1,21 +1,30 @@
 import os
 import pandas as pd
+import json
 
 import supervisely_lib as sly
 
+my_app = sly.AppService()
 TEAM_ID = int(os.environ['context.teamId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
 CATALOG_PATH = os.environ['modal.state.catalogPath']
 
-my_app = sly.AppService()
+CATALOG_DF = None
+CATALOG_INDEX = None
 
-PROJECT_ID = None
 
-
-@my_app.callback("render_video_labels_to_mp4")
+@my_app.callback("init_catalog")
 @sly.timeit
-def render_video_labels_to_mp4(api: sly.Api, task_id, context, state, app_logger):
-    pass
+def init_catalog(api: sly.Api, task_id, context, state, app_logger):
+    global CATALOG_DF
+    local_path = os.path.join(my_app.data_dir, CATALOG_PATH.lstrip("/"))
+    api.file.download(TEAM_ID, CATALOG_PATH, local_path)
+    CATALOG_DF = pd.read_csv(local_path)
+
+    fields = [
+        {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))}
+    ]
+    api.app.set_fields(task_id, fields)
 
 
 def main():
@@ -24,7 +33,12 @@ def main():
         "WORKSPACE_ID": WORKSPACE_ID,
         "CATALOG_PATH": CATALOG_PATH
     })
-    my_app.run(initial_events=[{"command": "render_video_labels_to_mp4"}])
+
+    data = {}
+    state = {}
+    data["catalog"] = {"columns": [], "data": []}
+    state["selectedTab"] = "product"
+    my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
 
 
 if __name__ == "__main__":
