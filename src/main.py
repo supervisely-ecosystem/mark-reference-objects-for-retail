@@ -53,6 +53,14 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     pprint.pprint(state)
 
 
+@my_app.callback("manual_selected_image_changed")
+def event_next_image(api: sly.Api, task_id, context, state, app_logger):
+    # print("context")
+    # pprint.pprint(context)
+    # print("state")
+    # pprint.pprint(state)
+    pass
+
 def main():
     sly.logger.info("Script arguments", extra={
         "TEAM_ID": TEAM_ID,
@@ -64,6 +72,9 @@ def main():
     state = {}
     data["catalog"] = {"columns": [], "data": []}
     state["selectedTab"] = "product"
+    state["fieldName"] = FIELD_NAME
+    state["columnName"] = COLUMN_NAME
+    state["perPage"] = 7
     my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
 
 
