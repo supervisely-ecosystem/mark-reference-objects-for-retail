@@ -1,40 +1,72 @@
-<div>
-<!--    <pre>{{state}}</pre>-->
-
+<div id="mark-reference-objects-for-retail">
+    <!--    <pre>{{state}}</pre>-->
+<!--// position: relative;-->
     <sly-style>
+        #mark-reference-objects-for-retail {
+
+        }
         #small_table.tiny-table table thead th {
-            font-size: 10px;
+        font-size: 10px;
         }
         #small_table.tiny-table table {
-            font-size: 11px;
+        font-size: 11px;
         }
         #small_tabs .el-tabs__item {
-            font-size: 10px;
-            font-weight: 500;
-            height: 30px;
-            line-height: 30px;
+        font-size: 10px;
+        font-weight: 500;
+        height: 30px;
+        line-height: 30px;
         }
         #small_tabs .el-tabs__header {
-            background: white;
-            position: fixed;
-            width: 100%;
-            z-index: 1;
+        background: white;
+        position: fixed;
+        width: 100%;
+        z-index: 1;
+        margin-top: 22px;
         }
 
         #small_tabs .el-tabs__content {
-            padding-top: 33px;
+        padding-top: 60px;
+        }
+
+        #mark-reference-objects-for-retail .app-header {
+        background: white;
+        position: fixed;
+        width: 100%;
+        z-index: 1;
         }
 
     </sly-style>
+<!--    <div class="app-header">-->
+<!--    <el-button type="primary" size="mini">Mark as reference</el-button>-->
+<!--    <el-tabs v-model="state.selectedTab">-->
+<!--        <el-tab-pane label="PRODUCT" name="product">-->
+<!--            <pre>123</pre>-->
+<!--        </el-tab-pane>-->
+<!--        <el-tab-pane label="CATALOG" name="catalog">-->
+<!--            <div style="overflow: scroll;">-->
+<!--                <sly-table id="small_table" :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}" :content="data.catalog"></sly-table>-->
+<!--            </div>-->
+<!--        </el-tab-pane>-->
+<!--    </el-tabs>-->
+
+<!--    <div style="overflow: scroll; max-height: 300px">-->
+<!--        <sly-table id="small_table" :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}" :content="data.catalog"></sly-table>-->
+<!--    </div>-->
+    <div class="app-header">
+        <el-button type="primary" size="mini">Mark as reference</el-button>
+    </div>
     <el-tabs id="small_tabs" v-model="state.selectedTab">
         <el-tab-pane label="PRODUCT" name="product">
-            <sly-table id="small_table" :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}" :content="data.catalog"></sly-table>
+            <el-button type="primary" size="mini">123</el-button>
         </el-tab-pane>
         <el-tab-pane label="CATALOG" name="catalog">
-            Catalog
+            <sly-table id="small_table" :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}"
+                       :content="data.catalog"></sly-table>
+        </el-tab-pane>
+        <el-tab-pane label="SETTINGS" name="settings">
         </el-tab-pane>
     </el-tabs>
-    <br/>
 
     <!--    <div class="fflex" style="align-items: stretch">-->
     <!--        <sly-card title="Input" style="width: 50%" class="mr15">-->

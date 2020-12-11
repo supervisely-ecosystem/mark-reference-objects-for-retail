@@ -3,4 +3,12 @@
                description="Copy path to csv product catalog in Team Files">
         <el-input v-model="state.catalogPath"></el-input>
     </sly-field>
+    <sly-field title="Image metadata field"
+               description="Name of the field to match image with product catalog">
+        <el-input v-model="state.fieldName"></el-input>
+    </sly-field>
+    <sly-field title="Catalog column"
+               description="Name of the column to match image with product catalog row">
+        <el-input v-model="state.columnName"></el-input>
+    </sly-field>
 </div>
