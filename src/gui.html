@@ -1,12 +1,40 @@
 <div>
-    <pre>{{state}}</pre>
-    <el-tabs v-model="state.selectedTab">
-        <el-tab-pane label="Product" name="product">
-            <sly-table :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}" :content="data.catalog"></sly-table>
-        </el-tab-pane>
-        <el-tab-pane label="Catalog" name="catalog">Catalog</el-tab-pane>
-    </el-tabs>
+<!--    <pre>{{state}}</pre>-->
 
+    <sly-style>
+        #small_table.tiny-table table thead th {
+            font-size: 10px;
+        }
+        #small_table.tiny-table table {
+            font-size: 11px;
+        }
+        #small_tabs .el-tabs__item {
+            font-size: 10px;
+            font-weight: 500;
+            height: 30px;
+            line-height: 30px;
+        }
+        #small_tabs .el-tabs__header {
+            background: white;
+            position: fixed;
+            width: 100%;
+            z-index: 1;
+        }
+
+        #small_tabs .el-tabs__content {
+            padding-top: 33px;
+        }
+
+    </sly-style>
+    <el-tabs id="small_tabs" v-model="state.selectedTab">
+        <el-tab-pane label="PRODUCT" name="product">
+            <sly-table id="small_table" :options="{perPage: 10, pageSizes: [10, 20, 50, 100]}" :content="data.catalog"></sly-table>
+        </el-tab-pane>
+        <el-tab-pane label="CATALOG" name="catalog">
+            Catalog
+        </el-tab-pane>
+    </el-tabs>
+    <br/>
 
     <!--    <div class="fflex" style="align-items: stretch">-->
     <!--        <sly-card title="Input" style="width: 50%" class="mr15">-->

@@ -21,6 +21,8 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
     api.file.download(TEAM_ID, CATALOG_PATH, local_path)
     CATALOG_DF = pd.read_csv(local_path)
 
+    CATALOG_INDEX
+
     fields = [
         {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))}
     ]
