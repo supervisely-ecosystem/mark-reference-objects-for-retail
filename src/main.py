@@ -7,9 +7,9 @@ import supervisely_lib as sly
 
 my_app = sly.AppService()
 TEAM_ID = int(os.environ['context.teamId'])
+OWNER_ID = int(os.environ['context.userId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
 PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
-
 CATALOG_PATH = os.environ['modal.state.catalogPath']
 FIELD_NAME = os.environ['modal.state.fieldName']
 COLUMN_NAME = os.environ['modal.state.columnName']
@@ -18,7 +18,6 @@ PROJECT = None
 META = None
 CATALOG_DF = None
 CATALOG_INDEX = None
-
 
 
 def build_catalog_index():
@@ -43,7 +42,7 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
         raise KeyError(f"Column {COLUMN_NAME} not found in CSV columns: {CATALOG_DF.columns}")
     build_catalog_index()
 
-    PROJECT = api.project.get_meta(PROJECT_ID)
+    PROJECT = api.project.get_info_by_id(PROJECT_ID)
 
     meta_json = api.project.get_meta(PROJECT_ID)
     META = sly.ProjectMeta.from_json(meta_json)
@@ -62,11 +61,13 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
         raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
 
     fields = [
+        {"field": "data.targetProject", "payload": {"id": PROJECT.id, "name": PROJECT.name}},
         {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))},
         {"field": "data.objectClasses", "payload": class_names},
         {"field": "state.targetClass", "payload": class_names[0]},
         {"field": "data.tags", "payload": tag_names},
         {"field": "state.referenceTag", "payload": tag_names[0]},
+        {"field": "state.multiselectClass", "payload": ""},
     ]
     api.app.set_fields(task_id, fields)
 
@@ -99,6 +100,7 @@ def main():
     state = {}
 
     data["catalog"] = {"columns": [], "data": []}
+    data["ownerId"] = OWNER_ID
     state["selectedTab"] = "product"
     state["fieldName"] = FIELD_NAME
     state["columnName"] = COLUMN_NAME
@@ -112,6 +114,7 @@ def main():
 #@TODO: FOR debug randomize image metadata field value, then implement using real fields
 #@TODO: create tag if not exists
 #@TODO: support multiple-select object
+#@TODO: readme - hide object properties when edit
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
 

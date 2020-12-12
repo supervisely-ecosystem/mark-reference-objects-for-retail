@@ -1,6 +1,9 @@
+<!--<div v-if="context.projectId !== data.projectId">-->
+<!--    This app session is only for project {{data.targetProject.name}} (id = {{data.targetProject.id}})-->
+<!--</div>-->
 <div id="mark-reference-objects-for-retail">
     <!--    <pre>{{state}}</pre>-->
-<!--// position: relative;-->
+    <!--// position: relative;-->
     <sly-style>
         #mark-reference-objects-for-retail {
 
@@ -38,13 +41,23 @@
 
     </sly-style>
     <div class="app-header">
-        <el-button
+        <div class="fflex">
+            <el-button
+                    class="mt5 ml5 mb15"
+                    type="primary"
+                    size="mini"
+                    :disabled="context.figureId === null">
+                Mark as reference
+            </el-button>
+            <el-button
                 class="mt5 ml5 mb15"
-                type="primary"
+                type="warning"
                 size="mini"
                 :disabled="context.figureId === null">
-            Mark as reference
+            Mark multiselect
         </el-button>
+        </div>
+
     </div>
     <el-tabs id="small_tabs" v-model="state.selectedTab">
         <el-tab-pane label="PRODUCT" name="product" class="ml5">
@@ -59,9 +72,10 @@
             ></sly-table>
         </el-tab-pane>
         <el-tab-pane label="SETTINGS" name="settings" class="ml5">
+            <!--            :disabled="context.userId !== data.ownerId">-->
             <span slot="label"><i class="zmdi zmdi-settings"></i> SETTINGS</span>
             <div class="fflex">
-                <div style="min-width:100px;">Match field: </div>
+                <div style="min-width:100px;">Match field:</div>
                 <el-input v-model="state.fieldName" size="small"></el-input>
             </div>
             <div class="fflex mt5">
@@ -95,6 +109,17 @@
                 <el-select v-model="state.referenceTag" filterable size="small">
                     <el-option
                             v-for="item in data.tags"
+                            :key="item"
+                            :label="item"
+                            :value="item">
+                    </el-option>
+                </el-select>
+            </div>
+            <div class="fflex mt5">
+                <div style="min-width:100px;">Multiselect class:</div>
+                <el-select v-model="state.multiselectClass" filterable size="small">
+                    <el-option
+                            v-for="item in data.objectClasses"
                             :key="item"
                             :label="item"
                             :value="item">
