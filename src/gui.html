@@ -50,12 +50,12 @@
                 Mark as reference
             </el-button>
             <el-button
-                class="mt5 ml5 mb15"
-                type="warning"
-                size="mini"
-                :disabled="context.figureId === null">
-            Mark multiselect
-        </el-button>
+                    class="mt5 ml5 mb15"
+                    type="warning"
+                    size="mini"
+                    :disabled="context.figureId === null || state.multiselectClass !== ''">
+                Mark multiselect
+            </el-button>
         </div>
 
     </div>

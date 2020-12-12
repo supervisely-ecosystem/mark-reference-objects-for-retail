@@ -106,13 +106,15 @@ def main():
     state["columnName"] = COLUMN_NAME
     state["perPage"] = 7
     state["targetClass"] = ""
+    state["referenceTag"] = ""
     state["objectClasses"] = []
+    state["multiselectClass"] = ""
     my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
+
 
 # classId - multiselect mark
 #@TODO: check project from context in HTML?
 #@TODO: FOR debug randomize image metadata field value, then implement using real fields
-#@TODO: create tag if not exists
 #@TODO: support multiple-select object
 #@TODO: readme - hide object properties when edit
 if __name__ == "__main__":
