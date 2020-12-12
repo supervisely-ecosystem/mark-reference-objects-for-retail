@@ -19,6 +19,8 @@ META = None
 CATALOG_DF = None
 CATALOG_INDEX = None
 
+AVAILABLE_IMAGES = {}
+
 
 def build_catalog_index():
     global CATALOG_INDEX
@@ -59,6 +61,10 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
             tag_names.append(tag_meta.name)
     if len(META.tag_metas) == 0:
         raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
+
+    #@TODO: how to make readOnly view for labeler
+    # for dataset in api.dataset.get_list(PROJECT.id):
+    #     AVAILABLE_IMAGES[dataset.]
 
     fields = [
         {"field": "data.targetProject", "payload": {"id": PROJECT.id, "name": PROJECT.name}},
@@ -117,6 +123,7 @@ def main():
 #@TODO: FOR debug randomize image metadata field value, then implement using real fields
 #@TODO: support multiple-select object
 #@TODO: readme - hide object properties when edit
+#@TODO: check that api saves userId that performed tagging action
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
 
