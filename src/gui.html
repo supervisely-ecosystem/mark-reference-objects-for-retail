@@ -74,7 +74,8 @@
     </div>
     <el-tabs id="small_tabs" v-model="state.selectedTab">
         <el-tab-pane label="PRODUCT" name="product" class="ml5">
-            <el-button type="primary" size="mini">123</el-button>
+            <div v-if="data.fieldNotFound.length > 0" style="color:red;">{{data.fieldNotFound}}</div>
+            <div v-if="data.fieldNotFound.length === 0" class="info"><b>{{state.fieldName}}</b>: {{data.fieldValue}}</div>
         </el-tab-pane>
         <el-tab-pane label="CATALOG" name="catalog" class="ml5">
             <span slot="label"><i class="zmdi zmdi-view-list-alt"></i> CATALOG</span>

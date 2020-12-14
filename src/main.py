@@ -29,7 +29,7 @@ def build_catalog_index():
     records = json.loads(CATALOG_DF.to_json(orient="records"))
     CATALOG_INDEX = {}
     for row in records:
-        CATALOG_INDEX[row[COLUMN_NAME]] = row
+        CATALOG_INDEX[str(row[COLUMN_NAME])] = row
 
 
 @my_app.callback("init_catalog")
@@ -79,7 +79,7 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
 
 
 @my_app.callback("manual_selected_figure_changed")
-def event_next_image(api: sly.Api, task_id, context, state, app_logger):
+def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
     print("context")
     pprint.pprint(context)
     print("state")
@@ -88,11 +88,31 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
 
 @my_app.callback("manual_selected_image_changed")
 def event_next_image(api: sly.Api, task_id, context, state, app_logger):
-    # print("context")
-    # pprint.pprint(context)
-    # print("state")
-    # pprint.pprint(state)
-    pass
+    image_id = context["imageId"]
+    image_info = api.image.get_info_by_id(image_id)
+    meta = dict((k.lower(), v) for k, v in image_info.meta.items())
+    field = meta.get(state["fieldName"].lower(), None)
+    if "E+" in field:
+        field = str(int(float(field)))
+
+    fields = []
+    if field is None:
+        fields.extend([
+            {"field": "data.fieldNotFound", "payload": "Field {!r} not found".format(state["state.fieldName"])},
+            {"field": "data.fieldValue", "payload": ""},
+            {"field": "data.catalogInfo", "payload": ""},
+        ])
+    else:
+        catalog_info = CATALOG_INDEX.get(field, None)
+        fieldNotFound = ""
+        if catalog_info is None:
+            fieldNotFound = "Key {!r} not found in catalog".format(field)
+        fields.extend([
+            {"field": "data.fieldNotFound", "payload": fieldNotFound},
+            {"field": "data.fieldValue", "payload": field},
+            {"field": "data.catalogInfo", "payload": catalog_info},
+        ])
+    api.app.set_fields(task_id, fields)
 
 
 def main():
@@ -107,6 +127,11 @@ def main():
 
     data["catalog"] = {"columns": [], "data": []}
     data["ownerId"] = OWNER_ID
+    data["currentMeta"] = {}
+    data["fieldNotFound"] = ""
+    data["fieldValue"] = ""
+    data["catalogInfo"] = {}
+
     state["selectedTab"] = "product"
     state["fieldName"] = FIELD_NAME
     state["columnName"] = COLUMN_NAME
