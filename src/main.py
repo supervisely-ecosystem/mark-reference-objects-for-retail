@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import json
 import pprint
+from collections import defaultdict
 
 import supervisely_lib as sly
 
@@ -19,7 +20,7 @@ META = None
 CATALOG_DF = None
 CATALOG_INDEX = None
 
-AVAILABLE_IMAGES = {}
+REFERENCES = defaultdict(list)
 
 
 def build_catalog_index():
@@ -30,6 +31,42 @@ def build_catalog_index():
     CATALOG_INDEX = {}
     for row in records:
         CATALOG_INDEX[str(row[COLUMN_NAME])] = row
+
+
+@my_app.callback("reindex_references")
+@sly.timeit
+def reindex_references(api: sly.Api, task_id, context, state, app_logger):
+    reference_tag_name = state["referenceTag"]
+    target_class_name = state["targetClass"]
+    field_name = state["fieldName"]
+
+    for dataset_info in api.dataset.get_list(PROJECT.id):
+        images_infos = api.image.get_list(dataset_info.id)
+        for batch in sly.batched(images_infos):
+            ids = [info.id for info in batch]
+            anns_infos = api.annotation.download_batch(dataset_info.id, ids)
+            anns = [sly.Annotation.from_json(info.annotation, META) for info in anns_infos]
+            for ann, image_info in zip(anns, batch):
+                if field_name not in image_info.meta:
+                    # @TODO: for debug
+                    image_info.meta[field_name] = str(857717004131)
+                    # logger.warn(f"Field {state['fieldName']} not found in metadata: "
+                    #             f"image \"{image_info.name}\"; id={image_info.id}")
+                    # continue
+
+                for label in ann.labels:
+                    label: sly.Label
+                    if label.obj_class.name != target_class_name:
+                        continue
+                    if label.tags.get(reference_tag_name) is not None:
+                        REFERENCES[image_info.meta[field_name]].append(
+                            {
+                                "image_info": image_info,
+                                "label": label
+                            }
+                        )
+                        REFERENCES[image_info] = defaultdict(list)
+                        label.geometry.sly_id
 
 
 @my_app.callback("init_catalog")
@@ -62,16 +99,13 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
     if len(META.tag_metas) == 0:
         raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
 
-    #@TODO: how to make readOnly view for labeler
-    # for dataset in api.dataset.get_list(PROJECT.id):
-    #     AVAILABLE_IMAGES[dataset.]
-
     fields = [
         {"field": "data.targetProject", "payload": {"id": PROJECT.id, "name": PROJECT.name}},
         {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))},
         {"field": "data.objectClasses", "payload": class_names},
         {"field": "state.targetClass", "payload": class_names[0]},
         {"field": "data.tags", "payload": tag_names},
+        {"field": "data.referenceExamples", "payload": 0},
         {"field": "state.referenceTag", "payload": tag_names[0]},
         {"field": "state.multiselectClass", "payload": ""},
     ]
@@ -86,14 +120,15 @@ def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
     pprint.pprint(state)
 
 
+
 @my_app.callback("manual_selected_image_changed")
 def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     image_id = context["imageId"]
     image_info = api.image.get_info_by_id(image_id)
     meta = dict((k.lower(), v) for k, v in image_info.meta.items())
-    field = meta.get(state["fieldName"].lower(), None)
-    if "E+" in field:
-        field = str(int(float(field)))
+    field = meta.get(state["fieldName"], None)
+    #@TODO: for debug
+    field = str(857717004131)
 
     fields = []
     if field is None:
@@ -104,13 +139,20 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
         ])
     else:
         catalog_info = CATALOG_INDEX.get(field, None)
+        examples_count = 0
+
         fieldNotFound = ""
         if catalog_info is None:
             fieldNotFound = "Key {!r} not found in catalog".format(field)
+        else:
+            #TODO: ...
+            pass
+
         fields.extend([
             {"field": "data.fieldNotFound", "payload": fieldNotFound},
             {"field": "data.fieldValue", "payload": field},
             {"field": "data.catalogInfo", "payload": catalog_info},
+            {"field": "data.referenceExamples", "payload": examples_count}
         ])
     api.app.set_fields(task_id, fields)
 
@@ -140,6 +182,10 @@ def main():
     state["referenceTag"] = ""
     state["objectClasses"] = []
     state["multiselectClass"] = ""
+
+    # build_references(api, referenceTag, app_logger)
+
+
     my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
 
 
