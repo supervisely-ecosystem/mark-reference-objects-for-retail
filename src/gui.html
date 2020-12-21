@@ -86,7 +86,7 @@
                     <div class="mt10" style="color: green; font-weight: 500;">
                         REFERENCES: {{data.referenceExamples}} found
                     </div>
-
+                    <sly-grid-gallery :content="data.previewRefs.content" :options="data.previewRefs.options"/>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">
@@ -156,9 +156,11 @@
                         class="mt5"
                         type="primary"
                         size="mini"
-                        @click="command('reindex_references')">
+                        @click="command('reindex_references')"
+                        :loading="data.reindexing">
                     Re-Index existing references
                 </el-button>
+                <b style="color: #777777; margin-top: 10px;">{{data.referencesCount}}</b> reference objects
             </el-tab-pane>
         </el-tabs>
     </div>

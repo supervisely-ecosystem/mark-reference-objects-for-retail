@@ -21,6 +21,13 @@ CATALOG_DF = None
 CATALOG_INDEX = None
 
 REFERENCES = defaultdict(list)
+image_grid_options = {
+    "opacity": 0.5,
+    "fillRectangle": False,
+    "enableZoom": False,
+    "syncViews": False
+}
+CNT_GRID_COLUMNS = 3
 
 
 def build_catalog_index():
@@ -36,6 +43,13 @@ def build_catalog_index():
 @my_app.callback("reindex_references")
 @sly.timeit
 def reindex_references(api: sly.Api, task_id, context, state, app_logger):
+    global REFERENCES
+    REFERENCES = defaultdict(list)
+    fields = [
+        {"field": "data.reindexing", "payload": True},
+    ]
+    api.app.set_fields(task_id, fields)
+
     reference_tag_name = state["referenceTag"]
     target_class_name = state["targetClass"]
     field_name = state["fieldName"]
@@ -65,8 +79,12 @@ def reindex_references(api: sly.Api, task_id, context, state, app_logger):
                                 "label": label
                             }
                         )
-                        REFERENCES[image_info] = defaultdict(list)
-                        label.geometry.sly_id
+
+    fields = [
+        {"field": "data.reindexing", "payload": False},
+        {"field": "data.referencesCount", "payload": sum([len(examples) for key, examples in REFERENCES.items()])},
+    ]
+    api.app.set_fields(task_id, fields)
 
 
 @my_app.callback("init_catalog")
@@ -108,17 +126,20 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
         {"field": "data.referenceExamples", "payload": 0},
         {"field": "state.referenceTag", "payload": tag_names[0]},
         {"field": "state.multiselectClass", "payload": ""},
+        {"field": "data.reindexing", "payload": False},
+        {"field": "data.referencesCount", "payload": 0},
+        {"field": "data.previewRefs", "payload": {"content": {}, "options": image_grid_options}},
     ]
     api.app.set_fields(task_id, fields)
 
 
 @my_app.callback("manual_selected_figure_changed")
 def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
-    print("context")
-    pprint.pprint(context)
-    print("state")
-    pprint.pprint(state)
-
+    # print("context")
+    # pprint.pprint(context)
+    # print("state")
+    # pprint.pprint(state)
+    pass
 
 
 @my_app.callback("manual_selected_image_changed")
@@ -139,20 +160,32 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
         ])
     else:
         catalog_info = CATALOG_INDEX.get(field, None)
-        examples_count = 0
+        current_refs = REFERENCES.get(field, [])
+        grid_data = {}
+        grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
+        for idx, ref_item in enumerate(current_refs):
+            image_info = ref_item["image_info"]
+            label = ref_item["label"]
+            grid_data[image_info.name] = {"url": image_info.full_storage_url,
+                                          "figures": [label.to_json()]}
+            grid_layout[idx % CNT_GRID_COLUMNS].append(image_info.name)
 
         fieldNotFound = ""
         if catalog_info is None:
             fieldNotFound = "Key {!r} not found in catalog".format(field)
-        else:
-            #TODO: ...
-            pass
+
+        content = {
+            "projectMeta": META.to_json(),
+            "annotations": grid_data,
+            "layout": grid_layout
+        }
 
         fields.extend([
             {"field": "data.fieldNotFound", "payload": fieldNotFound},
             {"field": "data.fieldValue", "payload": field},
             {"field": "data.catalogInfo", "payload": catalog_info},
-            {"field": "data.referenceExamples", "payload": examples_count}
+            {"field": "data.referenceExamples", "payload": len(current_refs)},
+            {"field": "data.previewRefs", "payload": {"content": content, "options": image_grid_options}},
         ])
     api.app.set_fields(task_id, fields)
 
