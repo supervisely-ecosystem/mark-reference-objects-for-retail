@@ -172,7 +172,8 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     else:
         catalog_info = CATALOG_INDEX.get(field, None)
         current_refs = REFERENCES.get(field, [])
-        # random.shuffle(current_refs)
+        #@TODO: for debug
+        random.shuffle(current_refs)
 
         grid_data = {}
         grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]

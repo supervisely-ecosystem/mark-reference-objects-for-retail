@@ -54,7 +54,9 @@
                         class="mt5 ml5 mb15"
                         type="warning"
                         size="mini"
-                        :disabled="context.figureId === null || state.multiselectClass === ''">
+                        :disabled="context.figureId === null ||
+                                   state.multiselectClass === '' ||
+                                   contect.figureClassTitle !== state.multiselectClass">
                     Mark multiselect
                 </el-button>
                 <el-button
