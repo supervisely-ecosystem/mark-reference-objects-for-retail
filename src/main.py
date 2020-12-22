@@ -172,9 +172,9 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
         for idx, ref_item in enumerate(current_refs):
             image_info = ref_item["image_info"]
             label = ref_item["label"]
-            grid_data[image_info.name] = {"url": image_info.full_storage_url,
-                                          "figures": [label.to_json()]}
-            grid_layout[idx % CNT_GRID_COLUMNS].append(image_info.name)
+            grid_data[label.geometry.sly_id] = {"url": image_info.full_storage_url,
+                                                "figures": [label.to_json()]}
+            grid_layout[idx % CNT_GRID_COLUMNS].append(label.geometry.sly_id)
 
         fieldNotFound = ""
         if catalog_info is None:
