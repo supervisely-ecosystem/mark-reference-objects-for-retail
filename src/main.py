@@ -2,6 +2,7 @@ import os
 import pandas as pd
 import json
 import pprint
+import random
 from collections import defaultdict
 
 import supervisely_lib as sly
@@ -23,11 +24,17 @@ CATALOG_INDEX = None
 REFERENCES = defaultdict(list)
 image_grid_options = {
     "opacity": 0.5,
-    "fillRectangle": True, #False
+    "fillRectangle": False, #True, False
     "enableZoom": False,
     "syncViews": False,
     "showPreview": True
 }
+image_preview_options = {
+    "opacity": 0.5,
+    "fillRectangle": False,
+    "enableZoom": True,
+}
+
 CNT_GRID_COLUMNS = 3
 
 
@@ -129,7 +136,10 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
         {"field": "state.multiselectClass", "payload": ""},
         {"field": "data.reindexing", "payload": False},
         {"field": "data.referencesCount", "payload": 0},
-        {"field": "data.previewRefs", "payload": {"content": {}, "options": image_grid_options, "zoomParams": {}}},
+        {"field": "data.previewRefs", "payload": {"content": {},
+                                                  "previewOptions": image_preview_options,
+                                                  "options": image_grid_options,
+                                                  "zoomParams": {}}},
     ]
     api.app.set_fields(task_id, fields)
 
@@ -162,6 +172,8 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     else:
         catalog_info = CATALOG_INDEX.get(field, None)
         current_refs = REFERENCES.get(field, [])
+        # random.shuffle(current_refs)
+
         grid_data = {}
         grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
         # "zoomParams": {
@@ -172,8 +184,14 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
         for idx, ref_item in enumerate(current_refs):
             image_info = ref_item["image_info"]
             label = ref_item["label"]
-            grid_data[label.geometry.sly_id] = {"url": image_info.full_storage_url,
-                                                "figures": [label.to_json()]}
+            grid_data[label.geometry.sly_id] = {
+                "url": image_info.full_storage_url,
+                "figures": [label.to_json()],
+                "zoomToFigure": {
+                    "figureId": label.geometry.sly_id,
+                    "factor": 2
+                    }
+            }
             grid_layout[idx % CNT_GRID_COLUMNS].append(label.geometry.sly_id)
 
         fieldNotFound = ""
@@ -229,10 +247,8 @@ def main():
 
 
 # classId - multiselect mark
-#@TODO: check project from context in HTML?
-#@TODO: FOR debug randomize image metadata field value, then implement using real fields
 #@TODO: support multiple-select object
-#@TODO: readme - hide object properties when edit
+#@TODO: readme- how to hide object properties on object select event
 #@TODO: check that api saves userId that performed tagging action
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
