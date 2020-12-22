@@ -84,9 +84,12 @@
                         <b style="color: #777777;">{{k}}</b>: {{v}}
                     </div>
                     <div class="mt10" style="color: green; font-weight: 500;">
-                        REFERENCES: {{data.referenceExamples}} found
+                        REFERENCES: {{data.refCount}} found
                     </div>
-                    <sly-grid-gallery :content="data.previewRefs.content" :options="data.previewRefs.options"/>
+                    <sly-grid-gallery v-if="data.refCount > 0"
+                                      :content="data.previewRefs.content"
+                                      :options="data.previewRefs.options"
+                                      :zoom-params="data.previewRefs.zoomParams"/>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">

@@ -23,9 +23,10 @@ CATALOG_INDEX = None
 REFERENCES = defaultdict(list)
 image_grid_options = {
     "opacity": 0.5,
-    "fillRectangle": False,
+    "fillRectangle": True, #False
     "enableZoom": False,
-    "syncViews": False
+    "syncViews": False,
+    "showPreview": True
 }
 CNT_GRID_COLUMNS = 3
 
@@ -128,7 +129,7 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
         {"field": "state.multiselectClass", "payload": ""},
         {"field": "data.reindexing", "payload": False},
         {"field": "data.referencesCount", "payload": 0},
-        {"field": "data.previewRefs", "payload": {"content": {}, "options": image_grid_options}},
+        {"field": "data.previewRefs", "payload": {"content": {}, "options": image_grid_options, "zoomParams": {}}},
     ]
     api.app.set_fields(task_id, fields)
 
@@ -163,6 +164,11 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
         current_refs = REFERENCES.get(field, [])
         grid_data = {}
         grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
+        # "zoomParams": {
+        #     "annotationKey": "1",
+        #     "figureId": 2,
+        #     "factor": 2
+        # }
         for idx, ref_item in enumerate(current_refs):
             image_info = ref_item["image_info"]
             label = ref_item["label"]
@@ -184,8 +190,8 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
             {"field": "data.fieldNotFound", "payload": fieldNotFound},
             {"field": "data.fieldValue", "payload": field},
             {"field": "data.catalogInfo", "payload": catalog_info},
-            {"field": "data.referenceExamples", "payload": len(current_refs)},
-            {"field": "data.previewRefs", "payload": {"content": content, "options": image_grid_options}},
+            {"field": "data.refCount", "payload": len(current_refs)},
+            {"field": "data.previewRefs.content", "payload": content},
         ])
     api.app.set_fields(task_id, fields)
 
