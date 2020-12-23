@@ -15,7 +15,7 @@
     "fieldName": "UPC",
     "columnName": "UPC CODE"
   },
-  "task_location": "application_sessions",
+  "task_location": "workspace_tasks",
   "isolate": true,
   "headless": true,
   "integrated_into": ["image_annotation_tool"],
