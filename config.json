@@ -11,7 +11,7 @@
   "gui_template": "src/gui.html",
   "modal_template": "src/modal.html",
   "modal_template_state": {
-    "catalogPath": "",
+    "catalogPath": "/retail/snacks_catalog.csv",
     "fieldName": "UPC",
     "columnName": "UPC CODE"
   },
@@ -20,5 +20,8 @@
   "headless": true,
   "integrated_into": "image_annotation_tool",
   "icon": "https://img.icons8.com/color/50/000000/ingredients.png",
-  "icon_background": "#FFFFFF"
+  "icon_background": "#FFFFFF",
+  "context_menu": {
+    "target": ["images_project"]
+  }
 }
