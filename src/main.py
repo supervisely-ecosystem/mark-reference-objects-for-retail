@@ -146,8 +146,8 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
 
 @my_app.callback("manual_selected_figure_changed")
 def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
-    # print("context")
-    # pprint.pprint(context)
+    print("context")
+    pprint.pprint(context)
     # print("state")
     # pprint.pprint(state)
     pass

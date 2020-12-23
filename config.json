@@ -11,13 +11,9 @@
   "gui_template": "src/gui.html",
   "modal_template": "src/modal.html",
   "modal_template_state": {
-    "videoId": "",
-    "allFrames": true,
-    "startFrame": 0,
-    "endFrame": 0,
-    "showClassName": true,
-    "thickness": 3,
-    "opacity": 50
+    "catalogPath": "",
+    "fieldName": "UPC",
+    "columnName": "UPC CODE"
   },
   "task_location": "application_sessions",
   "isolate": true,
