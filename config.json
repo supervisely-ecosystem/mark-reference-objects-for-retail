@@ -18,7 +18,7 @@
   "task_location": "application_sessions",
   "isolate": true,
   "headless": true,
-  "integrated_into": "image_annotation_tool",
+  "integrated_into": ["image_annotation_tool"],
   "icon": "https://img.icons8.com/color/50/000000/ingredients.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
