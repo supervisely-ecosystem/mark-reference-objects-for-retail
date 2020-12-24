@@ -193,7 +193,7 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
                 "figures": [label.to_json()],
                 "zoomToFigure": {
                     "figureId": label.geometry.sly_id,
-                    "factor": 2
+                    "factor": 1.5
                     }
             }
             grid_layout[idx % CNT_GRID_COLUMNS].append(label.geometry.sly_id)
@@ -268,8 +268,10 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
 
     _assign_tag_to_object(api, figure_id, tag_meta)
     for idx, label in enumerate(ann.labels):
+        if label.geometry.sly_id == figure_id:
+            continue
         if label.geometry.to_bbox().intersects_with(selected_label.geometry.to_bbox()) and label.obj_class.name == class_name:
-            _assign_tag_to_object(api, figure_id, tag_meta)
+            _assign_tag_to_object(api, label.geometry.sly_id, tag_meta)
 
 
 def main():
