@@ -23,6 +23,7 @@ CATALOG_DF = None
 CATALOG_INDEX = None
 ANNOTATIONS_CACHE = {}
 
+FINISHED_INDEX_IMAGES = {}
 
 REFERENCES = defaultdict(list)
 image_grid_options = {
@@ -143,6 +144,7 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
                                                   "previewOptions": image_preview_options,
                                                   "options": image_grid_options,
                                                   "zoomParams": {}}},
+        {"field": "data.processedImages", "payload": {}},
     ]
     api.app.set_fields(task_id, fields)
 
@@ -218,19 +220,6 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     api.app.set_fields(task_id, fields)
 
 
-# @my_app.callback("manual_selected_image_changed")
-# @sly.timeit
-# def tag_figure(api: sly.Api, task_id, context, state, app_logger):
-#     tags_json = api.advanced.get_object_tags(figure_id)
-#     tags = sly.TagCollection.from_json(tags_json, project_meta.tag_metas)
-#
-#     if remove_duplicates is True:
-#         for tag in tags:
-#             if tag.meta.sly_id == tag_meta_id:
-#                 api.advanced.remove_tag_from_object(tag_meta_id, figure_id, tag.sly_id)
-#
-#     api.advanced.add_tag_to_object(tag_meta_id, figure_id, value=value)
-
 @sly.timeit
 def _assign_tag_to_object(api, figure_id, tag_meta, remove_duplicates=True):
     tags_json = api.advanced.get_object_tags(figure_id)
@@ -242,12 +231,32 @@ def _assign_tag_to_object(api, figure_id, tag_meta, remove_duplicates=True):
     api.advanced.add_tag_to_object(tag_meta.sly_id, figure_id)
 
 
+def finish_images(images_ids):
+    # finished_images = {}
+    # for image_id in images_ids:
+    #     finished_images[image_id] = 1
+    #
+    # FINISHED_INDEX_IMAGES[image_id] = 1
+    # fields.extend([
+    #     {"field": "data.processedImages", "payload": {image_id: 1 for image_id in images_ids}, "append": true},
+    # ])
+    # api.app.set_fields(task_id, fields)
+    pass
+
+
 @my_app.callback("assign_tag_to_object")
 @sly.timeit
 def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
     tag_name = state["referenceTag"]
     tag_meta = META.get_tag_meta(tag_name)
     _assign_tag_to_object(api, context["figureId"], tag_meta)
+
+    image_id = context["imageId"]
+    FINISHED_INDEX_IMAGES[image_id] = 1
+    fields.extend([
+        {"field": "data.processedImages", "payload": {image_id: 1}, "append": true},
+    ])
+    api.app.set_fields(task_id, fields)
 
 
 @my_app.callback("multi_assign_tag_to_objects")
