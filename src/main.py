@@ -4,8 +4,9 @@ import json
 import pprint
 import random
 from collections import defaultdict
-
 import supervisely_lib as sly
+
+from utils import get_annotation
 
 my_app = sly.AppService()
 TEAM_ID = int(os.environ['context.teamId'])
@@ -17,9 +18,11 @@ FIELD_NAME = os.environ['modal.state.fieldName']
 COLUMN_NAME = os.environ['modal.state.columnName']
 
 PROJECT = None
-META = None
+META: sly.ProjectMeta = None
 CATALOG_DF = None
 CATALOG_INDEX = None
+ANNOTATIONS_CACHE = {}
+
 
 REFERENCES = defaultdict(list)
 image_grid_options = {
@@ -129,11 +132,11 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
         {"field": "data.targetProject", "payload": {"id": PROJECT.id, "name": PROJECT.name}},
         {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))},
         {"field": "data.objectClasses", "payload": class_names},
-        {"field": "state.targetClass", "payload": class_names[0]},
+        {"field": "state.targetClass", "payload": "kiwi"}, #@TODO: for debug: class_names[0]
         {"field": "data.tags", "payload": tag_names},
         {"field": "data.referenceExamples", "payload": 0},
-        {"field": "state.referenceTag", "payload": tag_names[0]},
-        {"field": "state.multiselectClass", "payload": ""},
+        {"field": "state.referenceTag", "payload": "ref"}, #@TODO: for debug: tag_names[0]
+        {"field": "state.multiselectClass", "payload": "banana"},#@TODO: for debug
         {"field": "data.reindexing", "payload": False},
         {"field": "data.referencesCount", "payload": 0},
         {"field": "data.previewRefs", "payload": {"content": {},
@@ -215,6 +218,60 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     api.app.set_fields(task_id, fields)
 
 
+# @my_app.callback("manual_selected_image_changed")
+# @sly.timeit
+# def tag_figure(api: sly.Api, task_id, context, state, app_logger):
+#     tags_json = api.advanced.get_object_tags(figure_id)
+#     tags = sly.TagCollection.from_json(tags_json, project_meta.tag_metas)
+#
+#     if remove_duplicates is True:
+#         for tag in tags:
+#             if tag.meta.sly_id == tag_meta_id:
+#                 api.advanced.remove_tag_from_object(tag_meta_id, figure_id, tag.sly_id)
+#
+#     api.advanced.add_tag_to_object(tag_meta_id, figure_id, value=value)
+
+@sly.timeit
+def _assign_tag_to_object(api, figure_id, tag_meta, remove_duplicates=True):
+    tags_json = api.advanced.get_object_tags(figure_id)
+    tags = sly.TagCollection.from_json(tags_json, META.tag_metas)
+    if remove_duplicates is True:
+        for tag in tags:
+            if tag.meta.sly_id == tag_meta.sly_id:
+                api.advanced.remove_tag_from_object(tag_meta.sly_id, figure_id, tag.sly_id)
+    api.advanced.add_tag_to_object(tag_meta.sly_id, figure_id)
+
+
+@my_app.callback("assign_tag_to_object")
+@sly.timeit
+def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
+    tag_name = state["referenceTag"]
+    tag_meta = META.get_tag_meta(tag_name)
+    _assign_tag_to_object(api, context["figureId"], tag_meta)
+
+
+@my_app.callback("multi_assign_tag_to_objects")
+@sly.timeit
+def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
+    tag_name = state["referenceTag"]
+    class_name = state["targetClass"]
+    image_id = context["imageId"]
+    figure_id = context["figureId"]
+
+    tag_meta = META.get_tag_meta(tag_name)
+    ann = get_annotation(META, ANNOTATIONS_CACHE, api, image_id, target_figure_id=figure_id)
+    selected_label = None
+    for label in ann.labels:
+        if label.geometry.sly_id == figure_id:
+            selected_label = label
+            break
+
+    _assign_tag_to_object(api, figure_id, tag_meta)
+    for idx, label in enumerate(ann.labels):
+        if label.geometry.to_bbox().intersects_with(selected_label.geometry.to_bbox()) and label.obj_class.name == class_name:
+            _assign_tag_to_object(api, figure_id, tag_meta)
+
+
 def main():
     sly.logger.info("Script arguments", extra={
         "TEAM_ID": TEAM_ID,
@@ -236,14 +293,12 @@ def main():
     state["fieldName"] = FIELD_NAME
     state["columnName"] = COLUMN_NAME
     state["perPage"] = 7
-    state["targetClass"] = ""
-    state["referenceTag"] = ""
+    state["targetClass"] = "kiwi" #@TODO: for debug
+    state["referenceTag"] = "ref"
     state["objectClasses"] = []
-    state["multiselectClass"] = ""
+    state["multiselectClass"] = "banana" #@TODO: for debug
 
-    # build_references(api, referenceTag, app_logger)
-
-
+    #@TODO: build_references(api, referenceTag, app_logger)
     my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
 
 
@@ -253,19 +308,3 @@ def main():
 #@TODO: check that api saves userId that performed tagging action
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
-
-
-#events from image-annotation-tool
-# export const ANNOTATION_TOOL_API_ACTIONS = {
-#   SET_FIGURE: 'figures/setFigure',
-#   NEXT_IMAGE: 'images/nextImage',
-#   PREV_IMAGE: 'images/prevImage',
-#   SET_IMAGE: 'images/setImage',
-#   SET_VIEWPORT: 'scene/setViewport',
-#   ZOOM_TO_OBJECT: 'scene/zoomToObject',
-# };
-
-# export const ANNOTATION_TOOL_ACTIONS_APP = {
-#   MANUAL_SELECTED_IMAGE_CHANGED: 'manual_selected_image_changed',
-#   MANUAL_SELECTED_FIGURE_CHANGED: 'manual_selected_figure_changed',
-# };

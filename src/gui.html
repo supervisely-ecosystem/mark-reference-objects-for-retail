@@ -1,6 +1,4 @@
 <div>
-<!--    <pre>{{context}}</pre>-->
-<!--    <pre>{{data.targetProject}}</pre>-->
     <div v-if="context.projectId !== data.targetProject.id" style="color: red;">
         This app session is only for project {{data.targetProject.name}} (id = {{data.targetProject.id}})
     </div>
@@ -47,8 +45,11 @@
                         class="mt5 ml5 mb15"
                         type="primary"
                         size="mini"
-                        :disabled="context.figureId === null">
-                    Mark as reference
+                        :disabled="context.figureId === null ||
+                                   state.referenceTag.length === 0 ||
+                                   context.figureClassTitle !== state.targetClass"
+                        @click="command('assign_tag_to_object')">
+                    Tag
                 </el-button>
                 <el-button
                         class="mt5 ml5 mb15"
@@ -56,22 +57,16 @@
                         size="mini"
                         :disabled="context.figureId === null ||
                                    state.multiselectClass === '' ||
-                                   context.figureClassTitle !== state.multiselectClass">
-                    Mark multiselect
+                                   context.figureClassTitle !== state.multiselectClass"
+                        @click="command('multi_assign_tag_to_objects')">
+                    Tag multiselect
                 </el-button>
                 <el-button
                         class="mt5 ml5 mb15"
                         type="primary"
                         size="mini"
                         :disabled="context.figureId === null">
-                    Finish image
-                </el-button>
-                <el-button
-                        class="mt5 ml5 mb15"
-                        type="primary"
-                        size="mini"
-                        :disabled="context.figureId === null">
-                    Finish current product
+                    Finish product
                 </el-button>
             </div>
         </div>
