@@ -31,12 +31,14 @@ image_grid_options = {
     "fillRectangle": False, #True, False
     "enableZoom": False,
     "syncViews": False,
-    "showPreview": True
+    "showPreview": True,
+    "selectable": True
 }
 image_preview_options = {
     "opacity": 0.5,
     "fillRectangle": False,
     "enableZoom": True,
+    "resizeOnZoom": True
 }
 
 CNT_GRID_COLUMNS = 3
@@ -195,7 +197,7 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
                 "figures": [label.to_json()],
                 "zoomToFigure": {
                     "figureId": label.geometry.sly_id,
-                    "factor": 1.5
+                    "factor": 1.2
                     }
             }
             grid_layout[idx % CNT_GRID_COLUMNS].append(label.geometry.sly_id)
