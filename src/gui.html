@@ -38,6 +38,10 @@
             z-index: 1;
             }
 
+            #mark-reference-objects-for-retail .grid-gallery-views-scene.img-grid-gallery {
+            z-index: 0;
+            }
+
         </sly-style>
         <div class="app-header">
             <div class="fflex">
@@ -89,7 +93,7 @@
                                       :content="data.previewRefs.content"
                                       :options="data.previewRefs.options"
                                       :value="state.selectedCard"
-                                      @input="state.selectedCard = $event; command('card')"/>
+                                      @input="state.selectedCard = $event; command('card_selected')"/>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">

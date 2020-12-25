@@ -160,6 +160,12 @@ def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
     pass
 
 
+@my_app.callback("card_selected")
+def card_selected(api: sly.Api, task_id, context, state, app_logger):
+    app_logger.info(f"Card selected: {state['selectedCard']}")
+    pass
+
+
 @my_app.callback("manual_selected_image_changed")
 def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     image_id = context["imageId"]
