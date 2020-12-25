@@ -189,10 +189,13 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
         #     "figureId": 2,
         #     "factor": 2
         # }
+        selectedCard = None
         for idx, ref_item in enumerate(current_refs):
             image_info = ref_item["image_info"]
             label = ref_item["label"]
-            grid_data[label.geometry.sly_id] = {
+            grid_key = str(label.geometry.sly_id)
+
+            grid_data[grid_key] = {
                 "url": image_info.full_storage_url,
                 "figures": [label.to_json()],
                 "zoomToFigure": {
@@ -200,7 +203,9 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
                     "factor": 1.2
                     }
             }
-            grid_layout[idx % CNT_GRID_COLUMNS].append(label.geometry.sly_id)
+            grid_layout[idx % CNT_GRID_COLUMNS].append(grid_key)
+            if selectedCard is None:
+                selectedCard = grid_key
 
         fieldNotFound = ""
         if catalog_info is None:
@@ -218,6 +223,7 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
             {"field": "data.catalogInfo", "payload": catalog_info},
             {"field": "data.refCount", "payload": len(current_refs)},
             {"field": "data.previewRefs.content", "payload": content},
+            {"field": "state.selectedCard", "payload": selectedCard},
         ])
     api.app.set_fields(task_id, fields)
 
@@ -310,7 +316,7 @@ def main():
     state["referenceTag"] = "ref"
     state["objectClasses"] = []
     state["multiselectClass"] = "banana" #@TODO: for debug
-
+    state["selectedCard"] = None
     #@TODO: build_references(api, referenceTag, app_logger)
     my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
 

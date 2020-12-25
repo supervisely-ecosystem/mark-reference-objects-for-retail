@@ -87,7 +87,9 @@
                     </div>
                     <sly-grid-gallery v-if="data.refCount > 0"
                                       :content="data.previewRefs.content"
-                                      :options="data.previewRefs.options"/>
+                                      :options="data.previewRefs.options"
+                                      :value="state.selectedCard"
+                                      @input="state.selectedCard = $event; command('card')"/>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">
