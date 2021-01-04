@@ -1,7 +1,6 @@
 <div>
-    <div>123</div>
-    <pre>{{context}}</pre>
-    <pre>{{state}}</pre>
+<!--    <pre>{{context}}</pre>-->
+<!--    <pre>{{state}}</pre>-->
     <sly-field title="Path to CSV catalog"
                description="Copy path to csv product catalog in Team Files">
         <el-input v-model="state.catalogPath"></el-input>
@@ -16,21 +15,21 @@
     </sly-field>
     <sly-field title="Target class"
                description="Only objects of selected class can be marked as references">
-        <sly-select-class :project-id="state.slyProjectId"
+        <sly-select-class :project-id="context.projectId"
                           :classes.sync="state.targetClassName"
                           :options="{showLabel: false}">
         </sly-select-class>
     </sly-field>
     <sly-field title="Reference tag"
                description="Choose tag that will be used to mark reference objects">
-        <sly-select-tag :project-id="state.slyProjectId"
+        <sly-select-tag :project-id="context.projectId"
                         :tags.sync="state.referenceTagName"
                         :options="{showLabel: false}">
         </sly-select-tag>
     </sly-field>
     <sly-field title="Multiselect class"
                description="Objects of this class is used to perform multiselect operations">
-        <sly-select-class :project-id="state.slyProjectId"
+        <sly-select-class :project-id="context.projectId"
                           :classes.sync="state.multiselectClassName"
                           :options="{showLabel: false}">
         </sly-select-class>
