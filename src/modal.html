@@ -16,20 +16,22 @@
     <sly-field title="Target class"
                description="Only objects of selected class can be marked as references">
         <sly-select-class :project-id="state.slyProjectId"
-                          :classes.sync="state.targetClassName">
+                          :classes.sync="state.targetClassName"
+                          :options="{showLabel: false}">
         </sly-select-class>
     </sly-field>
     <sly-field title="Reference tag"
                description="Choose tag that will be used to mark reference objects">
         <sly-select-tag :project-id="state.slyProjectId"
                         :tags.sync="state.referenceTagName"
-                        :options="data.options">
+                        :options="{showLabel: false}">
         </sly-select-tag>
     </sly-field>
     <sly-field title="Multiselect class"
                description="Objects of this class is used to perform multiselect operations">
         <sly-select-class :project-id="state.slyProjectId"
-                          :classes.sync="state.multiselectClassName">
+                          :classes.sync="state.multiselectClassName"
+                          :options="{showLabel: false}">
         </sly-select-class>
     </sly-field>
 </div>
