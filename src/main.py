@@ -86,6 +86,7 @@ def reindex_references(api: sly.Api, task_id, app_logger):
                             }
                         )
             progress.iters_done_report(len(batch))
+            break #@TODO: for debug
 
     fields = [
         {"field": "data.referencesCount", "payload": sum([len(examples) for key, examples in REFERENCES.items()])},
@@ -155,10 +156,7 @@ def card_selected(api: sly.Api, task_id, context, state, app_logger):
 def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     image_id = context["imageId"]
     image_info = api.image.get_info_by_id(image_id)
-    meta = dict((k.lower(), v) for k, v in image_info.meta.items())
-    field = meta.get(state["fieldName"], None)
-    #@TODO: for debug
-    field = str(857717004131)
+    field = image_info.meta.get(FIELD_NAME, None)
 
     fields = []
     if field is None:
