@@ -87,7 +87,7 @@
                         <b style="color: #777777;">{{k}}</b>: {{v}}
                     </div>
                     <div class="mt10" style="color: green; font-weight: 500;">
-                        REFERENCES: {{data.refCount}} found
+                        REFERENCES (found / total): {{data.refCount}} / {{data.referencesCount}}
                     </div>
                     <sly-grid-gallery v-if="data.refCount > 0"
                                       :content="data.previewRefs.content"
@@ -103,71 +103,6 @@
                            :content="data.catalog"
                            :key="state.perPage"
                 ></sly-table>
-            </el-tab-pane>
-            <el-tab-pane label="SETTINGS" name="settings" class="ml5">
-                <!--            :disabled="context.userId !== data.ownerId">-->
-                <span slot="label"><i class="zmdi zmdi-settings"></i> SETTINGS</span>
-                <div class="fflex mr5">
-                    <div style="min-width:100px;">Match field:</div>
-                    <el-input v-model="state.fieldName" size="small"></el-input>
-                </div>
-                <div class="fflex mt5 mr5">
-                    <div style="min-width:100px;">Match column:</div>
-                    <el-select v-model="state.columnName" filterable size="small">
-                        <el-option
-                                v-for="item in data.catalog.columns"
-                                :key="item"
-                                :label="item"
-                                :value="item">
-                        </el-option>
-                    </el-select>
-                </div>
-                <div class="fflex mt5 mr5">
-                    <div style="min-width:100px;">Rows per page:</div>
-                    <el-input-number size="small" :min="5" v-model="state.perPage"></el-input-number>
-                </div>
-                <div class="fflex mt5 mr5">
-                    <div style="min-width:100px;">Target class:</div>
-                    <el-select v-model="state.targetClass" filterable size="small">
-                        <el-option
-                                v-for="item in data.objectClasses"
-                                :key="item"
-                                :label="item"
-                                :value="item">
-                        </el-option>
-                    </el-select>
-                </div>
-                <div class="fflex mt5 mr5">
-                    <div style="min-width:100px;">Reference tag:</div>
-                    <el-select v-model="state.referenceTag" filterable size="small">
-                        <el-option
-                                v-for="item in data.tags"
-                                :key="item"
-                                :label="item"
-                                :value="item">
-                        </el-option>
-                    </el-select>
-                </div>
-                <div class="fflex mt5 mr5">
-                    <div style="min-width:100px;">Multiselect class:</div>
-                    <el-select v-model="state.multiselectClass" filterable size="small">
-                        <el-option
-                                v-for="item in data.objectClasses"
-                                :key="item"
-                                :label="item"
-                                :value="item">
-                        </el-option>
-                    </el-select>
-                </div>
-                <el-button
-                        class="mt5"
-                        type="primary"
-                        size="mini"
-                        @click="command('reindex_references')"
-                        :loading="data.reindexing">
-                    Re-Index existing references
-                </el-button>
-                <b style="color: #777777; margin-top: 10px;">{{data.referencesCount}}</b> reference objects
             </el-tab-pane>
         </el-tabs>
     </div>
