@@ -13,16 +13,19 @@ TEAM_ID = int(os.environ['context.teamId'])
 OWNER_ID = int(os.environ['context.userId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
 PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
+
 CATALOG_PATH = os.environ['modal.state.catalogPath']
 FIELD_NAME = os.environ['modal.state.fieldName']
 COLUMN_NAME = os.environ['modal.state.columnName']
+TARGET_CLASS_NAME = os.environ['modal.state.targetClassName']
+REFERENCE_TAG_NAME = os.environ['modal.state.referenceTagName']
+MULTISELECT_CLASS_NAME = os.environ['modal.state.multiselectClassName']
 
 PROJECT = None
 META: sly.ProjectMeta = None
 CATALOG_DF = None
 CATALOG_INDEX = None
 ANNOTATIONS_CACHE = {}
-
 FINISHED_INDEX_IMAGES = {}
 
 REFERENCES = defaultdict(list)
@@ -59,10 +62,6 @@ def build_catalog_index():
 def reindex_references(api: sly.Api, task_id, context, state, app_logger):
     global REFERENCES
     REFERENCES = defaultdict(list)
-    fields = [
-        {"field": "data.reindexing", "payload": True},
-    ]
-    api.app.set_fields(task_id, fields)
 
     reference_tag_name = state["referenceTag"]
     target_class_name = state["targetClass"]
@@ -95,7 +94,6 @@ def reindex_references(api: sly.Api, task_id, context, state, app_logger):
                         )
 
     fields = [
-        {"field": "data.reindexing", "payload": False},
         {"field": "data.referencesCount", "payload": sum([len(examples) for key, examples in REFERENCES.items()])},
     ]
     api.app.set_fields(task_id, fields)
@@ -105,6 +103,7 @@ def reindex_references(api: sly.Api, task_id, context, state, app_logger):
 @sly.timeit
 def init_catalog(api: sly.Api, task_id, context, state, app_logger):
     global CATALOG_DF, META, PROJECT
+
     local_path = os.path.join(my_app.data_dir, CATALOG_PATH.lstrip("/"))
     api.file.download(TEAM_ID, CATALOG_PATH, local_path)
     CATALOG_DF = pd.read_csv(local_path)
@@ -297,6 +296,25 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
             _assign_tag_to_object(api, label.geometry.sly_id, tag_meta)
 
 
+@my_app.callback("validate_input_arguments")
+@sly.timeit
+def validate_input_arguments(api: sly.Api):
+    global PROJECT, META
+    PROJECT = api.project.get_info_by_id(PROJECT_ID)
+    META = api.project.get_meta(PROJECT.id)
+
+    if META.obj_classes.get(TARGET_CLASS_NAME) is None:
+        raise KeyError(f"Target class `{TARGET_CLASS_NAME}` not found")
+    multiselect_class: sly.ObjClass = META.obj_classes.get(MULTISELECT_CLASS_NAME)
+    if multiselect_class is None:
+        raise KeyError(f"Multiselect class `{MULTISELECT_CLASS_NAME}` not found")
+    if multiselect_class.geometry_type != sly.Rectangle:
+        raise TypeError(f"Multiselect class type `{multiselect_class.geometry_type.geometry_name()}` is not rectangle")
+
+    if META.get_tag_meta(REFERENCE_TAG_NAME) is None:
+        raise KeyError(f"Reference tag `{REFERENCE_TAG_NAME}` not found")
+
+
 def main():
     sly.logger.info("Script arguments", extra={
         "TEAM_ID": TEAM_ID,
@@ -315,19 +333,14 @@ def main():
     data["catalogInfo"] = {}
 
     state["selectedTab"] = "product"
-    state["fieldName"] = FIELD_NAME
-    state["columnName"] = COLUMN_NAME
-    state["perPage"] = 7
-    state["targetClass"] = "kiwi" #@TODO: for debug
-    state["referenceTag"] = "ref"
-    state["objectClasses"] = []
-    state["multiselectClass"] = "banana" #@TODO: for debug
     state["selectedCard"] = None
-    #@TODO: build_references(api, referenceTag, app_logger)
-    my_app.run(data=data, state=state, initial_events=[{"command": "init_catalog"}])
 
+    my_app.run(data=data, state=state, initial_events=[
+        {"command": "validate_input_arguments"},
+        #{"command": "reindex_references"},
+        #{"command": "init_catalog"}
+    ])
 
-# classId - multiselect mark
 #@TODO: support multiple-select object
 #@TODO: readme- how to hide object properties on object select event
 #@TODO: check that api saves userId that performed tagging action
