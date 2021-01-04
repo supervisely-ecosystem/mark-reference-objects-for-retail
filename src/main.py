@@ -31,7 +31,7 @@ FINISHED_INDEX_IMAGES = {}
 REFERENCES = defaultdict(list)
 image_grid_options = {
     "opacity": 0.5,
-    "fillRectangle": False, #True, False
+    "fillRectangle": False, #True
     "enableZoom": False,
     "syncViews": False,
     "showPreview": True,
@@ -57,16 +57,11 @@ def build_catalog_index():
         CATALOG_INDEX[str(row[COLUMN_NAME])] = row
 
 
-@my_app.callback("reindex_references")
-@sly.timeit
-def reindex_references(api: sly.Api, task_id, context, state, app_logger):
+def reindex_references(api: sly.Api, task_id, app_logger):
     global REFERENCES
     REFERENCES = defaultdict(list)
 
-    reference_tag_name = state["referenceTag"]
-    target_class_name = state["targetClass"]
-    field_name = state["fieldName"]
-
+    progress = sly.Progress("Collecting existing references", PROJECT.items_count, ext_logger=app_logger, need_info_log=True)
     for dataset_info in api.dataset.get_list(PROJECT.id):
         images_infos = api.image.get_list(dataset_info.id)
         for batch in sly.batched(images_infos):
@@ -74,24 +69,23 @@ def reindex_references(api: sly.Api, task_id, context, state, app_logger):
             anns_infos = api.annotation.download_batch(dataset_info.id, ids)
             anns = [sly.Annotation.from_json(info.annotation, META) for info in anns_infos]
             for ann, image_info in zip(anns, batch):
-                if field_name not in image_info.meta:
-                    # @TODO: for debug
-                    image_info.meta[field_name] = str(857717004131)
-                    # logger.warn(f"Field {state['fieldName']} not found in metadata: "
-                    #             f"image \"{image_info.name}\"; id={image_info.id}")
-                    # continue
+                if FIELD_NAME not in image_info.meta:
+                    app_logger.warn(f"Field \"{FIELD_NAME}\" not found in metadata: "
+                                    f"image \"{image_info.name}\"; id={image_info.id}")
+                    continue
 
                 for label in ann.labels:
                     label: sly.Label
-                    if label.obj_class.name != target_class_name:
+                    if label.obj_class.name != TARGET_CLASS_NAME:
                         continue
-                    if label.tags.get(reference_tag_name) is not None:
+                    if label.tags.get(REFERENCE_TAG_NAME) is not None:
                         REFERENCES[image_info.meta[field_name]].append(
                             {
                                 "image_info": image_info,
                                 "label": label
                             }
                         )
+            progress.iters_done_report(len(batch))
 
     fields = [
         {"field": "data.referencesCount", "payload": sum([len(examples) for key, examples in REFERENCES.items()])},
@@ -99,9 +93,7 @@ def reindex_references(api: sly.Api, task_id, context, state, app_logger):
     api.app.set_fields(task_id, fields)
 
 
-@my_app.callback("init_catalog")
-@sly.timeit
-def init_catalog(api: sly.Api, task_id, context, state, app_logger):
+def init_catalog(api: sly.Api, task_id):
     global CATALOG_DF, META, PROJECT
 
     local_path = os.path.join(my_app.data_dir, CATALOG_PATH.lstrip("/"))
@@ -133,13 +125,7 @@ def init_catalog(api: sly.Api, task_id, context, state, app_logger):
     fields = [
         {"field": "data.targetProject", "payload": {"id": PROJECT.id, "name": PROJECT.name}},
         {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))},
-        {"field": "data.objectClasses", "payload": class_names},
-        {"field": "state.targetClass", "payload": "kiwi"}, #@TODO: for debug: class_names[0]
-        {"field": "data.tags", "payload": tag_names},
         {"field": "data.referenceExamples", "payload": 0},
-        {"field": "state.referenceTag", "payload": "ref"}, #@TODO: for debug: tag_names[0]
-        {"field": "state.multiselectClass", "payload": "banana"},#@TODO: for debug
-        {"field": "data.reindexing", "payload": False},
         {"field": "data.referencesCount", "payload": 0},
         {"field": "data.previewRefs", "payload": {"content": {},
                                                   "previewOptions": image_preview_options,
@@ -296,30 +282,20 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
             _assign_tag_to_object(api, label.geometry.sly_id, tag_meta)
 
 
-@my_app.callback("validate_input_arguments")
-@sly.timeit
-def validate_input_arguments(api: sly.Api):
-    global PROJECT, META
-    PROJECT = api.project.get_info_by_id(PROJECT_ID)
-    META = api.project.get_meta(PROJECT.id)
-
-    if META.obj_classes.get(TARGET_CLASS_NAME) is None:
-        raise KeyError(f"Target class `{TARGET_CLASS_NAME}` not found")
-    multiselect_class: sly.ObjClass = META.obj_classes.get(MULTISELECT_CLASS_NAME)
-    if multiselect_class is None:
-        raise KeyError(f"Multiselect class `{MULTISELECT_CLASS_NAME}` not found")
-    if multiselect_class.geometry_type != sly.Rectangle:
-        raise TypeError(f"Multiselect class type `{multiselect_class.geometry_type.geometry_name()}` is not rectangle")
-
-    if META.get_tag_meta(REFERENCE_TAG_NAME) is None:
-        raise KeyError(f"Reference tag `{REFERENCE_TAG_NAME}` not found")
-
-
 def main():
+    global PROJECT, META
+
     sly.logger.info("Script arguments", extra={
+        "OWNER_ID": OWNER_ID,
         "TEAM_ID": TEAM_ID,
         "WORKSPACE_ID": WORKSPACE_ID,
-        "CATALOG_PATH": CATALOG_PATH
+        "PROJECT_ID": PROJECT_ID,
+        "CATALOG_PATH": CATALOG_PATH,
+        "FIELD_NAME": FIELD_NAME,
+        "COLUMN_NAME": COLUMN_NAME,
+        "TARGET_CLASS_NAME": TARGET_CLASS_NAME,
+        "REFERENCE_TAG_NAME": REFERENCE_TAG_NAME,
+        "MULTISELECT_CLASS_NAME": MULTISELECT_CLASS_NAME
     })
 
     data = {}
@@ -335,11 +311,10 @@ def main():
     state["selectedTab"] = "product"
     state["selectedCard"] = None
 
-    my_app.run(data=data, state=state, initial_events=[
-        {"command": "validate_input_arguments"},
-        #{"command": "reindex_references"},
-        #{"command": "init_catalog"}
-    ])
+    init_catalog(my_app.public_api, my_app.task_id)
+    reindex_references(my_app.public_api, my_app.task_id, my_app.logger)
+
+    my_app.run(data=data, state=state)
 
 #@TODO: support multiple-select object
 #@TODO: readme- how to hide object properties on object select event
