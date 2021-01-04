@@ -13,23 +13,23 @@
                description="CSV Column used to match product catalog item with image">
         <el-input v-model="state.columnName"></el-input>
     </sly-field>
-    <sly-field class="mfo-hide-title" title="Target class"
+    <sly-field title="Target class"
                description="Only objects of selected class can be marked as references">
         <sly-select-class :project-id="state.slyProjectId"
-                          :classes.sync="state.targetClass">
+                          :classes.sync="state.targetClassName">
         </sly-select-class>
     </sly-field>
     <sly-field title="Reference tag"
                description="Choose tag that will be used to mark reference objects">
         <sly-select-tag :project-id="state.slyProjectId"
-                        :tags.sync="state.referenceTag"
+                        :tags.sync="state.referenceTagName"
                         :options="data.options">
         </sly-select-tag>
     </sly-field>
     <sly-field title="Multiselect class"
                description="Objects of this class is used to perform multiselect operations">
         <sly-select-class :project-id="state.slyProjectId"
-                          :classes.sync="state.multiselectClass">
+                          :classes.sync="state.multiselectClassName">
         </sly-select-class>
     </sly-field>
 </div>
