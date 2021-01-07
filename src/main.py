@@ -6,23 +6,7 @@ import globals as ag  # application globals
 import catalog
 import references
 from utils import get_annotation
-
-
-image_grid_options = {
-    "opacity": 0.5,
-    "fillRectangle": False, #True
-    "enableZoom": False,
-    "syncViews": False,
-    "showPreview": True,
-    "selectable": True
-}
-
-image_preview_options = {
-    "opacity": 0.5,
-    "fillRectangle": False,
-    "enableZoom": True,
-    "resizeOnZoom": True
-}
+from tagging import assign
 
 CNT_GRID_COLUMNS = 3
 
@@ -105,17 +89,6 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     api.app.set_fields(task_id, fields)
 
 
-@sly.timeit
-def _assign_tag_to_object(api, figure_id, tag_meta, remove_duplicates=True):
-    tags_json = api.advanced.get_object_tags(figure_id)
-    tags = sly.TagCollection.from_json(tags_json, META.tag_metas)
-    if remove_duplicates is True:
-        for tag in tags:
-            if tag.meta.sly_id == tag_meta.sly_id:
-                api.advanced.remove_tag_from_object(tag_meta.sly_id, figure_id, tag.sly_id)
-    api.advanced.add_tag_to_object(tag_meta.sly_id, figure_id)
-
-
 def finish_images(images_ids):
     # finished_images = {}
     # for image_id in images_ids:
@@ -132,16 +105,8 @@ def finish_images(images_ids):
 @ag.app.callback("assign_tag_to_object")
 @sly.timeit
 def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
-    tag_name = state["referenceTag"]
-    tag_meta = META.get_tag_meta(tag_name)
-    _assign_tag_to_object(api, context["figureId"], tag_meta)
-
-    image_id = context["imageId"]
-    FINISHED_INDEX_IMAGES[image_id] = 1
-    fields.extend([
-        {"field": "data.processedImages", "payload": {image_id: 1}, "append": true},
-    ])
-    api.app.set_fields(task_id, fields)
+    tag_meta = ag.meta.get_tag_meta(ag.reference_tag_name)
+    assign(context["figureId"], tag_meta)
 
 
 @ag.app.callback("multi_assign_tag_to_objects")
@@ -182,8 +147,8 @@ def main():
     data["referenceExamples"] = 0
     data["previewRefs"] = {
         "content": {},
-        "previewOptions": image_preview_options,
-        "options": image_grid_options,
+        "previewOptions": ag.image_preview_options,
+        "options": ag.image_grid_options,
         "zoomParams": {}
     }
     data["processedImages"] = {}
@@ -192,6 +157,8 @@ def main():
     state = {}
     state["selectedTab"] = "product"
     state["selectedCard"] = None
+    state["targetClass"] = ag.target_class_name
+    state["multiselectClass"] = ag.multiselect_class_name
 
     sly.logger.info("Initialize catalog ...")
     catalog.init()

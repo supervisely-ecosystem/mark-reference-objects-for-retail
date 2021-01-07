@@ -22,7 +22,20 @@ column_name = None
 target_class_name = None
 reference_tag_name = None
 multiselect_class_name = None
-
+image_grid_options = {
+    "opacity": 0.5,
+    "fillRectangle": False, #True
+    "enableZoom": False,
+    "syncViews": False,
+    "showPreview": True,
+    "selectable": True
+}
+image_preview_options = {
+    "opacity": 0.5,
+    "fillRectangle": False,
+    "enableZoom": True,
+    "resizeOnZoom": True
+}
 
 def init():
     sly.logger.info("Initialize input arguments")

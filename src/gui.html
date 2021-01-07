@@ -50,7 +50,6 @@
                         type="primary"
                         size="mini"
                         :disabled="context.figureId === null ||
-                                   state.referenceTag.length === 0 ||
                                    context.figureClassTitle !== state.targetClass"
                         @click="command('assign_tag_to_object')">
                     Tag
@@ -60,7 +59,6 @@
                         type="warning"
                         size="mini"
                         :disabled="context.figureId === null ||
-                                   state.multiselectClass === '' ||
                                    context.figureClassTitle !== state.multiselectClass"
                         @click="command('multi_assign_tag_to_objects')">
                     Tag multiselect
