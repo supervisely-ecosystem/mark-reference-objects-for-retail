@@ -94,7 +94,7 @@ def reindex_references(api: sly.Api, task_id, app_logger):
     api.app.set_fields(task_id, fields)
 
 
-def init_catalog(api: sly.Api, task_id):
+def init_catalog(api: sly.Api, task_id, data):
     global CATALOG_DF, META, PROJECT
 
     local_path = os.path.join(my_app.data_dir, CATALOG_PATH.lstrip("/"))
@@ -111,30 +111,20 @@ def init_catalog(api: sly.Api, task_id):
     META = sly.ProjectMeta.from_json(meta_json)
     if len(META.obj_classes) == 0:
         raise RuntimeError(f"Project {PROJECT.name} doesn't have classes")
-
-    class_names = []
-    for obj_class in META.obj_classes:
-        class_names.append(obj_class.name)
-    tag_names = []
-    for tag_meta in META.tag_metas:
-        tag_meta: sly.TagMeta
-        if tag_meta.value_type == sly.TagValueType.NONE:
-            tag_names.append(tag_meta.name)
     if len(META.tag_metas) == 0:
         raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
 
-    fields = [
-        {"field": "data.targetProject", "payload": {"id": PROJECT.id, "name": PROJECT.name}},
-        {"field": "data.catalog", "payload": json.loads(CATALOG_DF.to_json(orient="split"))},
-        {"field": "data.referenceExamples", "payload": 0},
-        {"field": "data.referencesCount", "payload": 0},
-        {"field": "data.previewRefs", "payload": {"content": {},
-                                                  "previewOptions": image_preview_options,
-                                                  "options": image_grid_options,
-                                                  "zoomParams": {}}},
-        {"field": "data.processedImages", "payload": {}},
-    ]
-    api.app.set_fields(task_id, fields)
+    data["targetProject"] = {"id": PROJECT.id, "name": PROJECT.name}
+    data["catalog"] = json.loads(CATALOG_DF.to_json(orient="split"))
+    data["referenceExamples"] = 0
+    data["referencesCount"] = 0
+    data["previewRefs"] = {
+        "content": {},
+        "previewOptions": image_preview_options,
+        "options": image_grid_options,
+        "zoomParams": {}
+    }
+    data["processedImages"] = {}
 
 
 @my_app.callback("manual_selected_figure_changed")
@@ -168,8 +158,6 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     else:
         catalog_info = CATALOG_INDEX.get(field, None)
         current_refs = REFERENCES.get(field, [])
-        #@TODO: for debug
-        random.shuffle(current_refs)
 
         grid_data = {}
         grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
@@ -309,11 +297,12 @@ def main():
     state["selectedTab"] = "product"
     state["selectedCard"] = None
 
-    init_catalog(my_app.public_api, my_app.task_id)
-    reindex_references(my_app.public_api, my_app.task_id, my_app.logger)
+    init_catalog(my_app.public_api, my_app.task_id, data)
+    #reindex_references(my_app.public_api, my_app.task_id, my_app.logger)
 
     my_app.run(data=data, state=state)
 
+#@TODO: redme - Open properties when edit - disable
 #@TODO: support multiple-select object
 #@TODO: readme- how to hide object properties on object select event
 #@TODO: check that api saves userId that performed tagging action
