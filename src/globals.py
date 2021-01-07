@@ -7,7 +7,7 @@ def _empty_string_error(var, name):
         raise ValueError(f"{name} is undefined")
 
 
-app: sly.AppService = None
+app: sly.AppService = sly.AppService()
 api: sly.Api = None
 task_id = None
 owner_id = None
@@ -26,9 +26,6 @@ multiselect_class_name = None
 
 def init():
     sly.logger.info("Initialize input arguments")
-
-    global app
-    app = sly.AppService()
 
     global api
     api = app.public_api

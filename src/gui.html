@@ -75,26 +75,24 @@
         </div>
         <el-tabs id="small_tabs" v-model="state.selectedTab">
             <el-tab-pane label="PRODUCT" name="product" class="ml5">
-<!--                <div v-if="data.fieldNotFound.length > 0" style="color:red;">{{data.fieldNotFound}}</div>-->
-<!--                <div v-if="data.fieldNotFound.length === 0" class="info">-->
-<!--&lt;!&ndash;                    <div>{{data.previewRefs.content.annotations}}</div>&ndash;&gt;-->
-<!--&lt;!&ndash;                    <pre>{{context}}</pre>&ndash;&gt;-->
-<!--                    <div v-if="context.imageId in data.processedImages" style="color: green">Image processed</div>-->
-<!--                    <div class="mt10" style="color: green; font-weight: 500;">IMAGE FIELD:</div>-->
-<!--                    <b style="color: #777777;">{{state.fieldName}}</b>: {{data.fieldValue}}-->
-<!--                    <div class="mt10" style="color: green; font-weight: 500;">CATALOG INFO:</div>-->
-<!--                    <div v-for="v,k in data.catalogInfo">-->
-<!--                        <b style="color: #777777;">{{k}}</b>: {{v}}-->
-<!--                    </div>-->
-<!--                    <div class="mt10" style="color: green; font-weight: 500;">-->
-<!--                        REFERENCES (found / total): {{data.refCount}} / {{data.referencesCount}}-->
-<!--                    </div>-->
-<!--                    <sly-grid-gallery v-if="data.refCount > 0"-->
-<!--                                      :content="data.previewRefs.content"-->
-<!--                                      :options="data.previewRefs.options"-->
-<!--                                      :value="state.selectedCard"-->
-<!--                                      @input="state.selectedCard = $event; command('card_selected')"/>-->
-<!--                </div>-->
+                <div v-if="data.fieldNotFound.length > 0" style="color:red;">{{data.fieldNotFound}}</div>
+                <div v-if="data.fieldNotFound.length === 0" class="info">
+                    <div v-if="context.imageId in data.processedImages" style="color: green">Image processed</div>
+                    <div class="mt10" style="color: green; font-weight: 500;">IMAGE FIELD:</div>
+                    <b style="color: #777777;">{{data.fieldName}}</b>: {{data.fieldValue}}
+                    <div class="mt10" style="color: green; font-weight: 500;">CATALOG INFO:</div>
+                    <div v-for="v,k in data.catalogInfo">
+                        <b style="color: #777777;">{{k}}</b>: {{v}}
+                    </div>
+                    <div class="mt10" style="color: green; font-weight: 500;">
+                        REFERENCES (found / total): {{data.refCount}} / {{data.referencesCount}}
+                    </div>
+                    <sly-grid-gallery v-if="data.refCount > 0"
+                                      :content="data.previewRefs.content"
+                                      :options="data.previewRefs.options"
+                                      :value="state.selectedCard"
+                                      @input="state.selectedCard = $event; command('card_selected')"/>
+                </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">
                 <span slot="label"><i class="zmdi zmdi-view-list-alt"></i> CATALOG</span>

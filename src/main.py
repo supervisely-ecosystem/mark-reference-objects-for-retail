@@ -1,56 +1,13 @@
-import os
-import pandas as pd
 import json
 import pprint
-import random
-from collections import defaultdict
 import supervisely_lib as sly
 
 import globals as ag  # application globals
-
-from utils import get_annotation
 import catalog
-
-my_app = sly.AppService()
-
-TEAM_ID = int(os.environ['context.teamId'])
-OWNER_ID = int(os.environ['context.userId'])
-WORKSPACE_ID = int(os.environ['context.workspaceId'])
-
-PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
-PROJECT = my_app.public_api.project.get_info_by_id(PROJECT_ID)
-META: sly.ProjectMeta = sly.ProjectMeta.from_json(my_app.public_api.project.get_meta(PROJECT_ID))
-if len(META.obj_classes) == 0:
-    raise RuntimeError(f"Project {PROJECT.name} doesn't have classes")
-if len(META.tag_metas) == 0:
-    raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
-
-CATALOG_PATH = os.environ['modal.state.catalogPath']
-if CATALOG_PATH == '':
-    raise ValueError("CSV catalog path is not defined")
-FIELD_NAME = os.environ['modal.state.fieldName']
-if FIELD_NAME == '':
-    raise ValueError("Image metadata field is not defined")
-COLUMN_NAME = os.environ['modal.state.columnName']
-if COLUMN_NAME == '':
-    raise ValueError("Catalog column name is not defined")
-TARGET_CLASS_NAME = os.environ['modal.state.targetClassName']
-if TARGET_CLASS_NAME == '':
-    raise ValueError("Target class name is not defined")
-REFERENCE_TAG_NAME = os.environ['modal.state.referenceTagName']
-if REFERENCE_TAG_NAME == '':
-    raise ValueError("Reference tag name is not defined")
-MULTISELECT_CLASS_NAME = os.environ['modal.state.multiselectClassName']
-if MULTISELECT_CLASS_NAME == '':
-    raise ValueError("Multiselect class name is not defined")
+import references
+from utils import get_annotation
 
 
-CATALOG_DF = None
-CATALOG_INDEX = None
-ANNOTATIONS_CACHE = {}
-FINISHED_INDEX_IMAGES = {}
-
-REFERENCES = defaultdict(list)
 image_grid_options = {
     "opacity": 0.5,
     "fillRectangle": False, #True
@@ -59,6 +16,7 @@ image_grid_options = {
     "showPreview": True,
     "selectable": True
 }
+
 image_preview_options = {
     "opacity": 0.5,
     "fillRectangle": False,
@@ -69,44 +27,7 @@ image_preview_options = {
 CNT_GRID_COLUMNS = 3
 
 
-def reindex_references(api: sly.Api, task_id, app_logger):
-    global REFERENCES
-    REFERENCES = defaultdict(list)
-
-    progress = sly.Progress("Collecting existing references", PROJECT.items_count, ext_logger=app_logger, need_info_log=True)
-    for dataset_info in api.dataset.get_list(PROJECT.id):
-        images_infos = api.image.get_list(dataset_info.id)
-        for batch in sly.batched(images_infos):
-            ids = [info.id for info in batch]
-            anns_infos = api.annotation.download_batch(dataset_info.id, ids)
-            anns = [sly.Annotation.from_json(info.annotation, META) for info in anns_infos]
-            for ann, image_info in zip(anns, batch):
-                if FIELD_NAME not in image_info.meta:
-                    app_logger.warn(f"Field \"{FIELD_NAME}\" not found in metadata: "
-                                    f"image \"{image_info.name}\"; id={image_info.id}")
-                    continue
-
-                for label in ann.labels:
-                    label: sly.Label
-                    if label.obj_class.name != TARGET_CLASS_NAME:
-                        continue
-                    if label.tags.get(REFERENCE_TAG_NAME) is not None:
-                        REFERENCES[image_info.meta[field_name]].append(
-                            {
-                                "image_info": image_info,
-                                "label": label
-                            }
-                        )
-            progress.iters_done_report(len(batch))
-            break #@TODO: for debug
-
-    fields = [
-        {"field": "data.referencesCount", "payload": sum([len(examples) for key, examples in REFERENCES.items()])},
-    ]
-    api.app.set_fields(task_id, fields)
-
-
-@my_app.callback("manual_selected_figure_changed")
+@ag.app.callback("manual_selected_figure_changed")
 def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
     print("context")
     pprint.pprint(context)
@@ -115,28 +36,28 @@ def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
     pass
 
 
-@my_app.callback("card_selected")
+@ag.app.callback("card_selected")
 def card_selected(api: sly.Api, task_id, context, state, app_logger):
     app_logger.info(f"Card selected: {state['selectedCard']}")
     pass
 
 
-@my_app.callback("manual_selected_image_changed")
+@ag.app.callback("manual_selected_image_changed")
 def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     image_id = context["imageId"]
     image_info = api.image.get_info_by_id(image_id)
-    field = image_info.meta.get(FIELD_NAME, None)
+    field = image_info.meta.get(ag.field_name, None)
 
     fields = []
     if field is None:
         fields.extend([
-            {"field": "data.fieldNotFound", "payload": "Field {!r} not found".format(state["state.fieldName"])},
+            {"field": "data.fieldNotFound", "payload": "Field {!r} not found".format(ag.field_name)},
             {"field": "data.fieldValue", "payload": ""},
             {"field": "data.catalogInfo", "payload": ""},
         ])
     else:
-        catalog_info = CATALOG_INDEX.get(field, None)
-        current_refs = REFERENCES.get(field, [])
+        catalog_info = catalog.index.get(field, None)
+        current_refs = references.data.get(field, [])
 
         grid_data = {}
         grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
@@ -168,7 +89,7 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
             fieldNotFound = "Key {!r} not found in catalog".format(field)
 
         content = {
-            "projectMeta": META.to_json(),
+            "projectMeta": ag.meta.to_json(),
             "annotations": grid_data,
             "layout": grid_layout
         }
@@ -208,7 +129,7 @@ def finish_images(images_ids):
     pass
 
 
-@my_app.callback("assign_tag_to_object")
+@ag.app.callback("assign_tag_to_object")
 @sly.timeit
 def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
     tag_name = state["referenceTag"]
@@ -223,7 +144,7 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
     api.app.set_fields(task_id, fields)
 
 
-@my_app.callback("multi_assign_tag_to_objects")
+@ag.app.callback("multi_assign_tag_to_objects")
 @sly.timeit
 def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
     tag_name = state["referenceTag"]
@@ -252,14 +173,13 @@ def main():
 
     data = {}
     data["catalog"] = {"columns": [], "data": []}
-    data["ownerId"] = OWNER_ID
+    data["ownerId"] = ag.owner_id
     data["targetProject"] = {"id": ag.project.id, "name": ag.project.name}
     data["currentMeta"] = {}
     data["fieldNotFound"] = ""
     data["fieldValue"] = ""
     data["catalogInfo"] = {}
     data["referenceExamples"] = 0
-    data["referencesCount"] = 0
     data["previewRefs"] = {
         "content": {},
         "previewOptions": image_preview_options,
@@ -267,16 +187,21 @@ def main():
         "zoomParams": {}
     }
     data["processedImages"] = {}
+    data["fieldName"] = ag.field_name
 
     state = {}
     state["selectedTab"] = "product"
     state["selectedCard"] = None
 
+    sly.logger.info("Initialize catalog ...")
     catalog.init()
     data["catalog"] = json.loads(catalog.df.to_json(orient="split"))
 
-    #reindex_references(my_app.public_api, my_app.task_id, my_app.logger)
-    my_app.run(data=data, state=state)
+    sly.logger.info("Initialize existing references ...")
+    references.index_existing()
+    data["referencesCount"] = sum([len(examples) for key, examples in references.data.items()])
+    ag.app.run(data=data, state=state)
+
 
 #@TODO: redme - Open properties when edit - disable
 #@TODO: readme - create classes before start
