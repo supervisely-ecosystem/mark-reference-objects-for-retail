@@ -6,8 +6,10 @@ import random
 from collections import defaultdict
 import supervisely_lib as sly
 
+import globals as ag  # application globals
+
 from utils import get_annotation
-from catalog import init_catalog
+import catalog
 
 my_app = sly.AppService()
 
@@ -246,26 +248,12 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
 
 
 def main():
-    global PROJECT, META
-
-    sly.logger.info("Script arguments", extra={
-        "OWNER_ID": OWNER_ID,
-        "TEAM_ID": TEAM_ID,
-        "WORKSPACE_ID": WORKSPACE_ID,
-        "PROJECT_ID": PROJECT_ID,
-        "CATALOG_PATH": CATALOG_PATH,
-        "FIELD_NAME": FIELD_NAME,
-        "COLUMN_NAME": COLUMN_NAME,
-        "TARGET_CLASS_NAME": TARGET_CLASS_NAME,
-        "REFERENCE_TAG_NAME": REFERENCE_TAG_NAME,
-        "MULTISELECT_CLASS_NAME": MULTISELECT_CLASS_NAME
-    })
+    ag.init()
 
     data = {}
-    state = {}
-
     data["catalog"] = {"columns": [], "data": []}
     data["ownerId"] = OWNER_ID
+    data["targetProject"] = {"id": ag.project.id, "name": ag.project.name}
     data["currentMeta"] = {}
     data["fieldNotFound"] = ""
     data["fieldValue"] = ""
@@ -280,11 +268,12 @@ def main():
     }
     data["processedImages"] = {}
 
+    state = {}
     state["selectedTab"] = "product"
     state["selectedCard"] = None
 
-    add_data = init_catalog(my_app.public_api, my_app.task_id, data, TEAM_ID, PROJECT_ID, CATALOG_PATH, COLUMN_NAME)
-    data = {**data, **add_data}
+    catalog.init()
+    data["catalog"] = json.loads(catalog.df.to_json(orient="split"))
 
     #reindex_references(my_app.public_api, my_app.task_id, my_app.logger)
     my_app.run(data=data, state=state)
