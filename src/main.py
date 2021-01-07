@@ -7,22 +7,42 @@ from collections import defaultdict
 import supervisely_lib as sly
 
 from utils import get_annotation
+from catalog import init_catalog
 
 my_app = sly.AppService()
+
 TEAM_ID = int(os.environ['context.teamId'])
 OWNER_ID = int(os.environ['context.userId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
+
 PROJECT_ID = int(os.environ['modal.state.slyProjectId'])
+PROJECT = my_app.public_api.project.get_info_by_id(PROJECT_ID)
+META: sly.ProjectMeta = sly.ProjectMeta.from_json(my_app.public_api.project.get_meta(PROJECT_ID))
+if len(META.obj_classes) == 0:
+    raise RuntimeError(f"Project {PROJECT.name} doesn't have classes")
+if len(META.tag_metas) == 0:
+    raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
 
 CATALOG_PATH = os.environ['modal.state.catalogPath']
+if CATALOG_PATH == '':
+    raise ValueError("CSV catalog path is not defined")
 FIELD_NAME = os.environ['modal.state.fieldName']
+if FIELD_NAME == '':
+    raise ValueError("Image metadata field is not defined")
 COLUMN_NAME = os.environ['modal.state.columnName']
+if COLUMN_NAME == '':
+    raise ValueError("Catalog column name is not defined")
 TARGET_CLASS_NAME = os.environ['modal.state.targetClassName']
+if TARGET_CLASS_NAME == '':
+    raise ValueError("Target class name is not defined")
 REFERENCE_TAG_NAME = os.environ['modal.state.referenceTagName']
+if REFERENCE_TAG_NAME == '':
+    raise ValueError("Reference tag name is not defined")
 MULTISELECT_CLASS_NAME = os.environ['modal.state.multiselectClassName']
+if MULTISELECT_CLASS_NAME == '':
+    raise ValueError("Multiselect class name is not defined")
 
-PROJECT = None
-META: sly.ProjectMeta = None
+
 CATALOG_DF = None
 CATALOG_INDEX = None
 ANNOTATIONS_CACHE = {}
@@ -45,16 +65,6 @@ image_preview_options = {
 }
 
 CNT_GRID_COLUMNS = 3
-
-
-def build_catalog_index():
-    global CATALOG_INDEX
-    if CATALOG_INDEX is not None:
-        return
-    records = json.loads(CATALOG_DF.to_json(orient="records"))
-    CATALOG_INDEX = {}
-    for row in records:
-        CATALOG_INDEX[str(row[COLUMN_NAME])] = row
 
 
 def reindex_references(api: sly.Api, task_id, app_logger):
@@ -92,39 +102,6 @@ def reindex_references(api: sly.Api, task_id, app_logger):
         {"field": "data.referencesCount", "payload": sum([len(examples) for key, examples in REFERENCES.items()])},
     ]
     api.app.set_fields(task_id, fields)
-
-
-def init_catalog(api: sly.Api, task_id, data):
-    global CATALOG_DF, META, PROJECT
-
-    local_path = os.path.join(my_app.data_dir, CATALOG_PATH.lstrip("/"))
-    api.file.download(TEAM_ID, CATALOG_PATH, local_path)
-    CATALOG_DF = pd.read_csv(local_path)
-
-    if COLUMN_NAME not in CATALOG_DF.columns:
-        raise KeyError(f"Column {COLUMN_NAME} not found in CSV columns: {CATALOG_DF.columns}")
-    build_catalog_index()
-
-    PROJECT = api.project.get_info_by_id(PROJECT_ID)
-
-    meta_json = api.project.get_meta(PROJECT_ID)
-    META = sly.ProjectMeta.from_json(meta_json)
-    if len(META.obj_classes) == 0:
-        raise RuntimeError(f"Project {PROJECT.name} doesn't have classes")
-    if len(META.tag_metas) == 0:
-        raise RuntimeError(f"Project {PROJECT.name} doesn't have tags (without value)")
-
-    data["targetProject"] = {"id": PROJECT.id, "name": PROJECT.name}
-    data["catalog"] = json.loads(CATALOG_DF.to_json(orient="split"))
-    data["referenceExamples"] = 0
-    data["referencesCount"] = 0
-    data["previewRefs"] = {
-        "content": {},
-        "previewOptions": image_preview_options,
-        "options": image_grid_options,
-        "zoomParams": {}
-    }
-    data["processedImages"] = {}
 
 
 @my_app.callback("manual_selected_figure_changed")
@@ -293,16 +270,27 @@ def main():
     data["fieldNotFound"] = ""
     data["fieldValue"] = ""
     data["catalogInfo"] = {}
+    data["referenceExamples"] = 0
+    data["referencesCount"] = 0
+    data["previewRefs"] = {
+        "content": {},
+        "previewOptions": image_preview_options,
+        "options": image_grid_options,
+        "zoomParams": {}
+    }
+    data["processedImages"] = {}
 
     state["selectedTab"] = "product"
     state["selectedCard"] = None
 
-    init_catalog(my_app.public_api, my_app.task_id, data)
-    #reindex_references(my_app.public_api, my_app.task_id, my_app.logger)
+    add_data = init_catalog(my_app.public_api, my_app.task_id, data, TEAM_ID, PROJECT_ID, CATALOG_PATH, COLUMN_NAME)
+    data = {**data, **add_data}
 
+    #reindex_references(my_app.public_api, my_app.task_id, my_app.logger)
     my_app.run(data=data, state=state)
 
 #@TODO: redme - Open properties when edit - disable
+#@TODO: readme - create classes before start
 #@TODO: support multiple-select object
 #@TODO: readme- how to hide object properties on object select event
 #@TODO: check that api saves userId that performed tagging action
