@@ -89,19 +89,6 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     api.app.set_fields(task_id, fields)
 
 
-def finish_images(images_ids):
-    # finished_images = {}
-    # for image_id in images_ids:
-    #     finished_images[image_id] = 1
-    #
-    # FINISHED_INDEX_IMAGES[image_id] = 1
-    # fields.extend([
-    #     {"field": "data.processedImages", "payload": {image_id: 1 for image_id in images_ids}, "append": true},
-    # ])
-    # api.app.set_fields(task_id, fields)
-    pass
-
-
 @ag.app.callback("assign_tag_to_object")
 @sly.timeit
 def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
