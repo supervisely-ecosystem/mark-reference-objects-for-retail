@@ -5,7 +5,7 @@ import supervisely_lib as sly
 import globals as ag  # application globals
 import catalog
 import references
-from utils import get_annotation
+import cache
 from tagging import assign
 
 CNT_GRID_COLUMNS = 3
@@ -98,26 +98,24 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
 
 @ag.app.callback("multi_assign_tag_to_objects")
 @sly.timeit
-def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
-    tag_name = state["referenceTag"]
-    class_name = state["targetClass"]
+def multi_assign_tag_to_objects(api: sly.Api, task_id, context, state, app_logger):
     image_id = context["imageId"]
     figure_id = context["figureId"]
+    tag_meta = ag.meta.get_tag_meta(ag.reference_tag_name)
+    ann = cache.get_annotation(image_id, target_figure_id=figure_id)
 
-    tag_meta = META.get_tag_meta(tag_name)
-    ann = get_annotation(META, ANNOTATIONS_CACHE, api, image_id, target_figure_id=figure_id)
     selected_label = None
     for label in ann.labels:
         if label.geometry.sly_id == figure_id:
             selected_label = label
             break
 
-    _assign_tag_to_object(api, figure_id, tag_meta)
+    assign(figure_id, tag_meta)
     for idx, label in enumerate(ann.labels):
-        if label.geometry.sly_id == figure_id:
+        if label.geometry.sly_id == figure_id or label.obj_class.name != ag.target_class_name:
             continue
-        if label.geometry.to_bbox().intersects_with(selected_label.geometry.to_bbox()) and label.obj_class.name == class_name:
-            _assign_tag_to_object(api, label.geometry.sly_id, tag_meta)
+        if label.geometry.to_bbox().intersects_with(selected_label.geometry.to_bbox()):
+            assign(label.geometry.sly_id, tag_meta)
 
 
 def main():

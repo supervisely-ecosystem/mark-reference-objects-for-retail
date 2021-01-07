@@ -11,7 +11,7 @@ def index_existing():
 
     progress = sly.Progress("Collecting existing references", ag.project.items_count, ext_logger=ag.app.logger, need_info_log=True)
     for dataset_info in ag.api.dataset.get_list(ag.project.id):
-        images_infos = ag.api.image.get_list(dataset_info.id)
+        images_infos = ag.api.image.get_list(2258, sort="name", sort_order="asc")
         for batch in sly.batched(images_infos):
             ids = [info.id for info in batch]
             anns_infos = ag.api.annotation.download_batch(dataset_info.id, ids)
