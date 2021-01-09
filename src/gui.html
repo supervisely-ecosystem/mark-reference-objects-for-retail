@@ -88,6 +88,7 @@
                         </div>
                     </div>
                     <sly-grid-gallery
+                            v-show="data.user.hasOwnProperty(context.userId) && data.user[context.userId].refCount > 0"
                             :content="(data.user.hasOwnProperty(context.userId) && data.user[context.userId].refCount > 0)
                                        ? data.user[context.userId].previewRefs.content
                                        : data.emptyGallery.content"
