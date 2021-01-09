@@ -1,5 +1,4 @@
 import json
-import pprint
 import supervisely_lib as sly
 
 import globals as ag  # application globals
@@ -16,28 +15,22 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     cur_image_info = api.image.get_info_by_id(cur_image_id)
     field = cur_image_info.meta.get(ag.field_name, None)
 
-    fields = []
     if field is None:
-        fields.extend([
-            {"field": "data.fieldNotFound", "payload": "Field {!r} not found".format(ag.field_name)},
-            {"field": "data.fieldValue", "payload": ""},
-            {"field": "data.catalogInfo", "payload": ""},
-        ])
+        fields = {
+            "fieldNotFound": "Field {!r} not found".format(ag.field_name),
+            "fieldValue": "",
+            "catalogInfo": {}
+        }
     else:
         catalog_info = catalog.index.get(field, None)
-        fieldNotFound = ""
-        if catalog_info is None:
-            fieldNotFound = "Key {!r} not found in catalog".format(field)
+        fields = {
+            "fieldNotFound": "" if catalog_info is not None else "Key {!r} not found in catalog".format(field),
+            "fieldValue": field,
+            "catalogInfo": catalog_info,
+        }
 
-        references.refresh_grid(field)
-
-        fields.extend([
-            {"field": "data.fieldNotFound", "payload": fieldNotFound},
-            {"field": "data.fieldValue", "payload": field},
-            {"field": "data.catalogInfo", "payload": catalog_info},
-        ])
-    api.app.set_fields(task_id, fields)
-
+    api.app.set_field(task_id, "data.user", {user_id: fields}, append=True)
+    references.refresh_grid(field)
 
 
 @ag.app.callback("assign_tag_to_object")
@@ -86,13 +79,16 @@ def main():
     ag.init()
 
     data = {}
+    data["user"] = {}
+
+    # data["fieldNotFound"] = ""
+    # data["fieldValue"] = ""
+    # data["catalogInfo"] = {}
+
     data["catalog"] = {"columns": [], "data": []}
     data["ownerId"] = ag.owner_id
     data["targetProject"] = {"id": ag.project.id, "name": ag.project.name}
     data["currentMeta"] = {}
-    data["fieldNotFound"] = ""
-    data["fieldValue"] = ""
-    data["catalogInfo"] = {}
     data["referenceExamples"] = 0
     data["previewRefs"] = {
         "content": {},
@@ -106,7 +102,6 @@ def main():
 
     state = {}
     state["selectedTab"] = "product"
-    state["selectedCard"] = None
     state["targetClass"] = ag.target_class_name
     state["multiselectClass"] = ag.multiselect_class_name
 

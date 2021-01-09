@@ -67,13 +67,20 @@
         </div>
         <el-tabs id="small_tabs" v-model="state.selectedTab">
             <el-tab-pane label="PRODUCT" name="product" class="ml5">
-                <div v-if="data.fieldNotFound.length > 0" style="color:red;">{{data.fieldNotFound}}</div>
-                <div v-if="data.fieldNotFound.length === 0" class="info">
-                    <div v-if="context.imageId in data.processedImages" style="color: green">Image processed</div>
+                <div v-if="data.user.hasOwnProperty(context.userId) &&
+                           data.user[context.userId].fieldNotFound.length > 0"
+                     style="color:red;"
+                >
+                    {{data.user[context.userId].fieldNotFound}}
+                </div>
+                <div v-if="data.user.hasOwnProperty(context.userId) &&
+                           data.user[context.userId].fieldNotFound.length === 0"
+                     class="info"
+                >
                     <div class="mt10" style="color: green; font-weight: 500;">IMAGE FIELD:</div>
-                    <b style="color: #777777;">{{data.fieldName}}</b>: {{data.fieldValue}}
+                    <b style="color: #777777;">{{data.fieldName}}</b>: {{data.user[context.userId].fieldValue}}
                     <div class="mt10" style="color: green; font-weight: 500;">CATALOG INFO:</div>
-                    <div v-for="v,k in data.catalogInfo">
+                    <div v-for="v,k in data.user[context.userId].catalogInfo">
                         <b style="color: #777777;">{{k}}</b>: {{v}}
                     </div>
                     <div class="mt10" style="color: green; font-weight: 500;">
@@ -81,9 +88,7 @@
                     </div>
                     <sly-grid-gallery v-if="data.refCount > 0"
                                       :content="data.previewRefs.content"
-                                      :options="data.previewRefs.options"
-                                      :value="state.selectedCard"
-                                      @input="state.selectedCard = $event; command('card_selected')"/>
+                                      :options="data.previewRefs.options"/>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">

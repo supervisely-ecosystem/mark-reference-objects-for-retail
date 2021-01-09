@@ -94,6 +94,5 @@ def refresh_grid(field_value):
         {"field": "data.refCount", "payload": card_index},
         {"field": "data.referencesCount", "payload": count},
         {"field": "data.previewRefs.content", "payload": content},
-        {"field": "state.selectedCard", "payload": selectedCard},
     ]
     ag.api.app.set_fields(ag.task_id, fields)
