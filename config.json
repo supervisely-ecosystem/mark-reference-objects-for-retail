@@ -12,8 +12,11 @@
   "modal_template": "src/modal.html",
   "modal_template_state": {
     "catalogPath": "/retail/snacks_catalog.csv",
-    "fieldName": "UPC",
-    "columnName": "UPC CODE"
+    "fieldName": " UPC",
+    "columnName": "UPC CODE",
+    "targetClassName": "",
+    "referenceTagName": "",
+    "multiselectClassName": ""
   },
   "task_location": "workspace_tasks",
   "isolate": true,
