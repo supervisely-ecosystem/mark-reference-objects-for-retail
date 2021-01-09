@@ -6,7 +6,7 @@
     "reference items"
   ],
   "description": "Prepare examples for products from catalog",
-  "docker_image": "supervisely/base-py-sdk:6.1.39",
+  "docker_image": "supervisely/base-py-sdk:6.1.40",
   "main_script": "src/main.py",
   "gui_template": "src/gui.html",
   "modal_template": "src/modal.html",
