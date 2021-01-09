@@ -37,9 +37,10 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
 @sly.timeit
 def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
     tag_meta = ag.meta.get_tag_meta(ag.reference_tag_name)
+    userId = context["userId"]
     figure_id = context["figureId"]
     image_id = context["imageId"]
-    assign(figure_id, tag_meta)
+    assign(api, figure_id, tag_meta)
 
     image_info = api.image.get_info_by_id(image_id)
     field_value = image_info.meta[ag.field_name]
@@ -48,12 +49,13 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
     if label is None:
         raise KeyError(f"Figure with id {figureId} is not found in annotation")
     references.add(field_value, image_info, label)
-    references.refresh_grid(field_value)
+    references.refresh_grid(userId, field_value)
 
 
 @ag.app.callback("multi_assign_tag_to_objects")
 @sly.timeit
 def multi_assign_tag_to_objects(api: sly.Api, task_id, context, state, app_logger):
+    userId = context["userId"]
     image_id = context["imageId"]
     image_info = api.image.get_info_by_id(image_id)
     field_value = image_info.meta[ag.field_name]
@@ -64,15 +66,15 @@ def multi_assign_tag_to_objects(api: sly.Api, task_id, context, state, app_logge
     selected_label = ann.get_label_by_id(figure_id)
     if selected_label is None:
         raise KeyError(f"Figure with id {figureId} is not found in annotation")
-    assign(figure_id, tag_meta)
+    assign(api, figure_id, tag_meta)
 
     for idx, label in enumerate(ann.labels):
         if label.geometry.sly_id == figure_id or label.obj_class.name != ag.target_class_name:
             continue
         if label.geometry.to_bbox().intersects_with(selected_label.geometry.to_bbox()):
-            assign(label.geometry.sly_id, tag_meta)
+            assign(api, label.geometry.sly_id, tag_meta)
             references.add(field_value, image_info, label)
-    references.refresh_grid(field_value)
+    references.refresh_grid(userId, field_value)
 
 
 def main():
@@ -102,10 +104,7 @@ def main():
     ag.app.run(data=data, state=state)
 
 
-#@TODO: redme - Open properties when edit - disable
+#@TODO: redme - how to hide object properties on object select event
 #@TODO: readme - create classes before start
-#@TODO: support multiple-select object
-#@TODO: readme- how to hide object properties on object select event
-#@TODO: check that api saves userId that performed tagging action
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
