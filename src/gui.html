@@ -84,11 +84,11 @@
                         <b style="color: #777777;">{{k}}</b>: {{v}}
                     </div>
                     <div class="mt10" style="color: green; font-weight: 500;">
-                        REFERENCES (found / total): {{data.refCount}} / {{data.referencesCount}}
+                        REFERENCES (found / total): {{data.user[context.userId].refCount}} / {{data.user[context.userId].totalRefCount}}
                     </div>
-                    <sly-grid-gallery v-if="data.refCount > 0"
-                                      :content="data.previewRefs.content"
-                                      :options="data.previewRefs.options"/>
+                    <sly-grid-gallery v-if="data.user[context.userId].refCount > 0"
+                                      :content="data.user[context.userId].previewRefs.content"
+                                      :options="data.user[context.userId].previewRefs.options"/>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">

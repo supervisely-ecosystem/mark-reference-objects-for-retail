@@ -12,7 +12,8 @@ label_by_id = {}
 def index_existing():
     global data, count
 
-    progress = sly.Progress("Collecting existing references", ag.project.items_count, ext_logger=ag.app.logger, need_info_log=True)
+    progress = sly.Progress("Collecting existing references", ag.project.items_count, ext_logger=ag.app.logger,
+                            need_info_log=True)
     for dataset_info in ag.api.dataset.get_list(ag.project.id):
         images_infos = ag.api.image.get_list(2258, sort="name", sort_order="asc")
         for batch in sly.batched(images_infos):
@@ -35,7 +36,7 @@ def index_existing():
                         data[field_value][image_info.id].add(label.geometry.sly_id)
                         count += 1
             progress.iters_done_report(len(batch))
-            break #@TODO: for debug
+            break  # @TODO: for debug
         break  # @TODO: for debug
 
 
@@ -47,9 +48,8 @@ def add(field_value, image_info, label):
     count += 1
 
 
-def refresh_grid(field_value):
+def refresh_grid(user_id, field_value):
     grid_data = {}
-    selectedCard = None
     card_index = 0
 
     current_refs = data.get(field_value, {})
@@ -80,19 +80,19 @@ def refresh_grid(field_value):
                 }
             }
             grid_layout[card_index % CNT_GRID_COLUMNS].append(grid_key)
-            if selectedCard is None:
-                selectedCard = grid_key
             card_index += 1
 
-    content = {
-        "projectMeta": ag.meta.to_json(),
-        "annotations": grid_data,
-        "layout": grid_layout
+    fields = {
+        "refCount": ref_count,
+        "totalRefCount": count,
+        "previewRefs": {
+            "content": {
+                "projectMeta": ag.meta.to_json(),
+                "annotations": grid_data,
+                "layout": grid_layout
+            },
+            "previewOptions": ag.image_preview_options,
+            "options": ag.image_grid_options,
+        }
     }
-
-    fields = [
-        {"field": "data.refCount", "payload": card_index},
-        {"field": "data.referencesCount", "payload": count},
-        {"field": "data.previewRefs.content", "payload": content},
-    ]
-    ag.api.app.set_fields(ag.task_id, fields)
+    ag.api.app.set_field(ag.task_id, f"data.user.{user_id}", fields, append=True)

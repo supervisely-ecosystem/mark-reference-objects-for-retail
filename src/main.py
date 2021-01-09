@@ -30,7 +30,7 @@ def event_next_image(api: sly.Api, task_id, context, state, app_logger):
         }
 
     api.app.set_field(task_id, "data.user", {user_id: fields}, append=True)
-    references.refresh_grid(field)
+    references.refresh_grid(user_id, field)
 
 
 @ag.app.callback("assign_tag_to_object")
@@ -81,24 +81,11 @@ def main():
     data = {}
     data["user"] = {}
 
-    # data["fieldNotFound"] = ""
-    # data["fieldValue"] = ""
-    # data["catalogInfo"] = {}
-
     data["catalog"] = {"columns": [], "data": []}
     data["ownerId"] = ag.owner_id
     data["targetProject"] = {"id": ag.project.id, "name": ag.project.name}
     data["currentMeta"] = {}
-    data["referenceExamples"] = 0
-    data["previewRefs"] = {
-        "content": {},
-        "previewOptions": ag.image_preview_options,
-        "options": ag.image_grid_options,
-        "zoomParams": {}
-    }
-    data["processedImages"] = {}
     data["fieldName"] = ag.field_name
-    data["debug"] = {}
 
     state = {}
     state["selectedTab"] = "product"
@@ -111,7 +98,6 @@ def main():
 
     sly.logger.info("Initialize existing references ...")
     references.index_existing()
-    data["referencesCount"] = references.count
 
     ag.app.run(data=data, state=state)
 
