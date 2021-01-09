@@ -9,23 +9,9 @@ import cache
 from tagging import assign
 
 
-@ag.app.callback("manual_selected_figure_changed")
-def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
-    print("context")
-    pprint.pprint(context)
-    # print("state")
-    # pprint.pprint(state)
-    pass
-
-
-@ag.app.callback("card_selected")
-def card_selected(api: sly.Api, task_id, context, state, app_logger):
-    app_logger.info(f"Card selected: {state['selectedCard']}")
-    pass
-
-
 @ag.app.callback("manual_selected_image_changed")
 def event_next_image(api: sly.Api, task_id, context, state, app_logger):
+    user_id = context["userId"]
     cur_image_id = context["imageId"]
     cur_image_info = api.image.get_info_by_id(cur_image_id)
     field = cur_image_info.meta.get(ag.field_name, None)
@@ -116,6 +102,7 @@ def main():
     }
     data["processedImages"] = {}
     data["fieldName"] = ag.field_name
+    data["debug"] = {}
 
     state = {}
     state["selectedTab"] = "product"
