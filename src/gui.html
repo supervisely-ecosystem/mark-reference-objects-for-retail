@@ -90,10 +90,10 @@
                     <sly-grid-gallery
                             :content="(data.user.hasOwnProperty(context.userId) && data.user[context.userId].refCount > 0)
                                        ? data.user[context.userId].previewRefs.content
-                                       : {}"
+                                       : data.emptyGallery.content"
                             :options="(data.user.hasOwnProperty(context.userId) && data.user[context.userId].refCount > 0)
                                        ? data.user[context.userId].previewRefs.options
-                                       : {}"/>
+                                       : data.emptyGallery.options"/>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">

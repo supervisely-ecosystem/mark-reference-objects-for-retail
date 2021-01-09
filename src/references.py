@@ -8,6 +8,16 @@ count = 0
 image_by_id = {}
 label_by_id = {}
 
+empty_gallery = {
+    "content": {
+        "projectMeta": {},
+        "annotations": {},
+        "layout": []
+    },
+    "previewOptions": ag.image_preview_options,
+    "options": ag.image_grid_options,
+}
+
 
 def index_existing():
     global data, count
