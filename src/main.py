@@ -9,8 +9,6 @@ import cache
 from tagging import assign
 
 
-
-
 @ag.app.callback("manual_selected_figure_changed")
 def event_next_figure(api: sly.Api, task_id, context, state, app_logger):
     print("context")
@@ -66,8 +64,10 @@ def assign_tag_to_object(api: sly.Api, task_id, context, state, app_logger):
 
     image_info = api.image.get_info_by_id(image_id)
     field_value = image_info.meta[ag.field_name]
-    ann = cache.get_annotation(image_id, target_figure_id=figure_id)
+    ann = cache.get_annotation(image_id)
     label = ann.get_label_by_id(figure_id)
+    if label is None:
+        raise KeyError(f"Figure with id {figureId} is not found in annotation")
     references.add(field_value, image_info, label)
     references.refresh_grid(field_value)
 
@@ -78,19 +78,22 @@ def multi_assign_tag_to_objects(api: sly.Api, task_id, context, state, app_logge
     image_id = context["imageId"]
     image_info = api.image.get_info_by_id(image_id)
     field_value = image_info.meta[ag.field_name]
-
     figure_id = context["figureId"]
     tag_meta = ag.meta.get_tag_meta(ag.reference_tag_name)
-    ann = cache.get_annotation(image_id, target_figure_id=figure_id)
+    ann = cache.get_annotation(image_id)
 
     selected_label = ann.get_label_by_id(figure_id)
+    if selected_label is None:
+        raise KeyError(f"Figure with id {figureId} is not found in annotation")
     assign(figure_id, tag_meta)
+
     for idx, label in enumerate(ann.labels):
         if label.geometry.sly_id == figure_id or label.obj_class.name != ag.target_class_name:
             continue
         if label.geometry.to_bbox().intersects_with(selected_label.geometry.to_bbox()):
             assign(label.geometry.sly_id, tag_meta)
             references.add(field_value, image_info, label)
+    references.refresh_grid(field_value)
 
 
 def main():
@@ -131,7 +134,6 @@ def main():
     ag.app.run(data=data, state=state)
 
 
-#@TODO: references for images - found/total неправильно работают
 #@TODO: redme - Open properties when edit - disable
 #@TODO: readme - create classes before start
 #@TODO: support multiple-select object

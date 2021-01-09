@@ -7,7 +7,6 @@ count = 0
 
 image_by_id = {}
 label_by_id = {}
-CNT_GRID_COLUMNS = 3
 
 
 def index_existing():
@@ -50,11 +49,22 @@ def add(field_value, image_info, label):
 
 def refresh_grid(field_value):
     grid_data = {}
-    grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
     selectedCard = None
     card_index = 0
 
     current_refs = data.get(field_value, {})
+
+    ref_count = 0
+    for ref_image_id, ref_labels_ids in current_refs.items():
+        ref_count += len(ref_labels_ids)
+    if ref_count <= 1:
+        CNT_GRID_COLUMNS = 1
+    elif ref_count <= 6:
+        CNT_GRID_COLUMNS = 2
+    else:
+        CNT_GRID_COLUMNS = 3
+
+    grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
     for ref_image_id, ref_labels_ids in current_refs.items():
         image_info = image_by_id[ref_image_id]
         for label_id in ref_labels_ids:
