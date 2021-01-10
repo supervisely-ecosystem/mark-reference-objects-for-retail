@@ -50,18 +50,9 @@
                         type="primary"
                         size="mini"
                         :disabled="context.figureId === null ||
-                                   context.figureClassTitle !== state.targetClass"
-                        @click="command('assign_tag_to_object')">
+                                   ![state.targetClass, state.multiselectClass].includes(context.figureClassTitle)"
+                        @click="command('assign_tag')">
                     Tag
-                </el-button>
-                <el-button
-                        class="mt5 ml5 mb15"
-                        type="warning"
-                        size="mini"
-                        :disabled="context.figureId === null ||
-                                   context.figureClassTitle !== state.multiselectClass"
-                        @click="command('multi_assign_tag_to_objects')">
-                    Tag multiselect
                 </el-button>
             </div>
         </div>
