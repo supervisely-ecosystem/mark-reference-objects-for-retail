@@ -74,6 +74,7 @@ def refresh_grid(user_id, field_value):
     else:
         CNT_GRID_COLUMNS = 3
 
+    cards_checkboxes = {}
     grid_layout = [[] for i in range(CNT_GRID_COLUMNS)]
     for ref_image_id, ref_labels_ids in current_refs.items():
         image_info = image_by_id[ref_image_id]
@@ -81,7 +82,9 @@ def refresh_grid(user_id, field_value):
             label = label_by_id[label_id]
             grid_key = str(label_id)
 
+            cards_checkboxes[grid_key] = False
             grid_data[grid_key] = {
+                "labelId": grid_key,  # duplicate for simplicity
                 "url": image_info.full_storage_url,
                 "figures": [label.to_json()],
                 "zoomToFigure": {
@@ -106,3 +109,6 @@ def refresh_grid(user_id, field_value):
         }
     }
     ag.api.app.set_field(ag.task_id, f"data.user.{user_id}", fields, append=True)
+    print(cards_checkboxes)
+    ag.api.app.set_field(ag.task_id, f"state.user.{user_id}.cardsCheckboxes", cards_checkboxes)
+

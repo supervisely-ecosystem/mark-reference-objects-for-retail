@@ -77,6 +77,7 @@ def main():
     state["selectedTab"] = "product"
     state["targetClass"] = ag.target_class_name
     state["multiselectClass"] = ag.multiselect_class_name
+    state["user"] = {}
 
     sly.logger.info("Initialize catalog ...")
     catalog.init()

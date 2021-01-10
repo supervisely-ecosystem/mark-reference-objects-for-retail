@@ -64,6 +64,7 @@
                 >
                     {{data.user[context.userId].fieldNotFound}}
                 </div>
+                <div v-if="data.user.hasOwnProperty(context.userId)">{{state.user[context.userId]}}</div>
                 <div class="info">
                     <div v-if="data.user.hasOwnProperty(context.userId) &&
                                data.user[context.userId].fieldNotFound.length === 0">
@@ -85,7 +86,12 @@
                                        : data.emptyGallery.content"
                             :options="(data.user.hasOwnProperty(context.userId) && data.user[context.userId].refCount > 0)
                                        ? data.user[context.userId].previewRefs.options
-                                       : data.emptyGallery.options"/>
+                                       : data.emptyGallery.options"
+                    >
+                        <template v-slot:card-footer="{ card }">
+                            <pre>{{card.labelId}}</pre>
+                        </template>
+                    </sly-grid-gallery>
                 </div>
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">
