@@ -46,8 +46,8 @@ def index_existing():
                     if label.tags.get(ag.reference_tag_name) is not None:
                         add(field_value, image_info, label)
             progress.iters_done_report(len(batch))
-            break  # @TODO: for debug
-        break  # @TODO: for debug
+            #break  # @TODO: for debug
+        #break  # @TODO: for debug
 
 
 def add(field_value, image_info, label):

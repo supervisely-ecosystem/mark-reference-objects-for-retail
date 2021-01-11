@@ -119,7 +119,7 @@ def main():
 
     ag.app.run(data=data, state=state)
 
-
+#@TODO: save references to file at the end
 #@TODO: redme - how to hide object properties on object select event
 #@TODO: readme - create classes before start
 if __name__ == "__main__":
