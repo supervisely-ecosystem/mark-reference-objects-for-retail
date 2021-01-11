@@ -58,6 +58,15 @@ def add(field_value, image_info, label):
     count += 1
 
 
+def delete(field_value, image_info, label):
+    global count
+    image_by_id[image_info.id] = image_info
+    label_by_id[label.geometry.sly_id] = label
+    if label.geometry.sly_id in data[field_value][image_info.id]:
+        data[field_value][image_info.id].remove(label.geometry.sly_id)
+        count -= 1
+
+
 def refresh_grid(user_id, field_value):
     grid_data = {}
     card_index = 0
@@ -109,6 +118,5 @@ def refresh_grid(user_id, field_value):
         }
     }
     ag.api.app.set_field(ag.task_id, f"data.user.{user_id}", fields, append=True)
-    print(cards_checkboxes)
     ag.api.app.set_field(ag.task_id, f"state.user.{user_id}.cardsCheckboxes", cards_checkboxes)
 
