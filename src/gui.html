@@ -21,38 +21,63 @@
             }
             #small_tabs .el-tabs__header {
             background: white;
-            position: fixed;
-            width: 100%;
-            z-index: 1;
-            margin-top: 30px;
-            }
-
-            #small_tabs .el-tabs__content {
-            padding-top: 65px;
             }
 
             #mark-reference-objects-for-retail .app-header {
             background: white;
-            position: fixed;
-            width: 100%;
-            z-index: 1;
             }
 
             #mark-reference-objects-for-retail .grid-gallery-views-scene.img-grid-gallery {
             z-index: 0;
             }
 
+            #mark-reference-objects-for-retail {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            left: 0;
+            }
+            #mark-reference-objects-for-retail .el-tabs {
+            display: flex;
+            flex-direction: column;
+            height: calc(100% - 42px);
+            }
+            #mark-reference-objects-for-retail .el-tabs__content {
+            overflow: scroll;
+            }
+
         </sly-style>
         <div class="app-header">
-            <div class="fflex">
-                <el-button
-                        class="mt5 ml5 mb15"
-                        type="primary"
-                        size="mini"
-                        :disabled="context.figureId === null ||
+            <div class="fflex" style="justify-content: space-between">
+                <div>
+                    <el-button
+                            class="mt5 ml5 mb15"
+                            type="primary"
+                            size="mini"
+                            :disabled="context.figureId === null ||
                                    ![state.targetClass, state.multiselectClass].includes(context.figureClassTitle)"
-                        @click="command('assign_tag')">
-                    Tag
+                            @click="command('assign_tag')">
+                        <i class="zmdi zmdi-label mr5"></i> Tag
+                    </el-button>
+                    <el-button
+                            class="mt5 ml5 mb15"
+                            type="warning"
+                            size="mini"
+                            :disabled="context.figureId === null ||
+                                   ![state.targetClass, state.multiselectClass].includes(context.figureClassTitle)"
+                            @click="command('delete_tag')">
+                        <i class="zmdi zmdi-close-circle mr5"></i> Untag
+                    </el-button>
+                </div>
+                <el-button
+                        class="mt5 mr5 mb15"
+                        type="danger"
+                        size="mini"
+                        :disabled="Object.values(state.user[context.userId].cardsCheckboxes).filter(Boolean).length == 0"
+                        @click="command('delete_reference')"
+                >
+                    <i class="zmdi zmdi-delete mr5"></i> Delete references
                 </el-button>
             </div>
         </div>
@@ -78,6 +103,7 @@
                             REFERENCES (found / total): {{data.user[context.userId].refCount}} /
                             {{data.user[context.userId].totalRefCount}}
                         </div>
+
                     </div>
                     <sly-grid-gallery
                             v-show="data.user.hasOwnProperty(context.userId) && data.user[context.userId].refCount > 0"
@@ -88,9 +114,14 @@
                                        ? data.user[context.userId].previewRefs.options
                                        : data.emptyGallery.options"
                     >
-<!--                        <template v-slot:card-footer="{ card }">-->
-<!--                            <pre>{{card.labelId}}</pre>-->
-<!--                        </template>-->
+                        <template v-slot:card-footer="{ annotation }">
+                            <el-checkbox
+                                    class="mt5"
+                                    v-model="state.user[context.userId].cardsCheckboxes[annotation.labelId]"
+                            >
+                                Select
+                            </el-checkbox>
+                        </template>
                     </sly-grid-gallery>
                 </div>
             </el-tab-pane>
