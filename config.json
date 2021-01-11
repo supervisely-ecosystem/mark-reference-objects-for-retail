@@ -10,7 +10,7 @@
   "main_script": "src/main.py",
   "gui_template": "src/gui.html",
   "modal_template": "src/modal.html",
-  "modal_template_state": {
+  "prod_modal_template_state": {
     "catalogPath": "",
     "fieldName": "",
     "columnName": "",
@@ -18,7 +18,7 @@
     "referenceTagName": "",
     "multiselectClassName": ""
   },
-  "_debug_modal_template_state": {
+  "modal_template_state": {
     "catalogPath": "/retail/snacks_catalog.csv",
     "fieldName": " UPC",
     "columnName": "UPC CODE",

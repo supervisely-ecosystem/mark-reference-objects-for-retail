@@ -46,8 +46,8 @@ def index_existing():
                         data[field_value][image_info.id].add(label.geometry.sly_id)
                         count += 1
             progress.iters_done_report(len(batch))
-        #    break  # @TODO: for debug
-        #break  # @TODO: for debug
+            break  # @TODO: for debug
+        break  # @TODO: for debug
 
 
 def add(field_value, image_info, label):
