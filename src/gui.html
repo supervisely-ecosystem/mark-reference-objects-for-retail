@@ -89,11 +89,10 @@
                 >
                     {{data.user[context.userId].fieldNotFound}}
                 </div>
-                <div v-if="data.user.hasOwnProperty(context.userId)">{{state.user[context.userId]}}</div>
                 <div class="info">
                     <div v-if="data.user.hasOwnProperty(context.userId) &&
                                data.user[context.userId].fieldNotFound.length === 0">
-                        <div class="mt10" style="color: green; font-weight: 500;">IMAGE FIELD:</div>
+                        <div style="color: green; font-weight: 500;">IMAGE FIELD:</div>
                         <b style="color: #777777;">{{data.fieldName}}</b>: {{data.user[context.userId].fieldValue}}
                         <div class="mt10" style="color: green; font-weight: 500;">CATALOG INFO:</div>
                         <div v-for="v,k in data.user[context.userId].catalogInfo">
@@ -119,7 +118,7 @@
                                     class="mt5"
                                     v-model="state.user[context.userId].cardsCheckboxes[annotation.labelId]"
                             >
-                                Select
+                                delete
                             </el-checkbox>
                         </template>
                     </sly-grid-gallery>

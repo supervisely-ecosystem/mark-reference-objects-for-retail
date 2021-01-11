@@ -1,4 +1,5 @@
 from collections import defaultdict
+import threading
 import supervisely_lib as sly
 import globals as ag
 
@@ -7,6 +8,8 @@ count = 0
 
 image_by_id = {}
 label_by_id = {}
+label_to_image = {}
+modify_lock = threading.Lock()
 
 empty_gallery = {
     "content": {
@@ -41,30 +44,32 @@ def index_existing():
                     if label.obj_class.name != ag.target_class_name:
                         continue
                     if label.tags.get(ag.reference_tag_name) is not None:
-                        image_by_id[image_info.id] = image_info
-                        label_by_id[label.geometry.sly_id] = label
-                        data[field_value][image_info.id].add(label.geometry.sly_id)
-                        count += 1
+                        add(field_value, image_info, label)
             progress.iters_done_report(len(batch))
             break  # @TODO: for debug
         break  # @TODO: for debug
 
 
 def add(field_value, image_info, label):
-    global count
+    global count, modify_lock
+    modify_lock.acquire()
     image_by_id[image_info.id] = image_info
     label_by_id[label.geometry.sly_id] = label
+    label_to_image[label.geometry.sly_id] = image_info.id
     data[field_value][image_info.id].add(label.geometry.sly_id)
     count += 1
+    modify_lock.release()
 
 
 def delete(field_value, image_info, label):
-    global count
+    global count, modify_lock
+    modify_lock.acquire()
     image_by_id[image_info.id] = image_info
     label_by_id[label.geometry.sly_id] = label
     if label.geometry.sly_id in data[field_value][image_info.id]:
         data[field_value][image_info.id].remove(label.geometry.sly_id)
         count -= 1
+    modify_lock.release()
 
 
 def refresh_grid(user_id, field_value):

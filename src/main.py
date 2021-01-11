@@ -71,6 +71,26 @@ def delete_tag(api: sly.Api, task_id, context, state, app_logger):
     change_tag(api, task_id, context, state, app_logger, delete, references.delete)
 
 
+@ag.app.callback("delete_reference")
+@sly.timeit
+def delete_reference(api: sly.Api, task_id, context, state, app_logger):
+    tag_meta = ag.meta.get_tag_meta(ag.reference_tag_name)
+    userId = context["userId"]
+    checkboxes = state["user"][str(userId)]["cardsCheckboxes"]
+    print(json.dumps(checkboxes, indent=4))
+    for str_label_id, need_delete in checkboxes.items():
+        if need_delete is False:
+            continue
+        label_id = int(str_label_id)
+        image_id = references.label_to_image[label_id]
+        image_info = api.image.get_info_by_id(image_id)
+        field_value = image_info.meta[ag.field_name]
+
+        delete(api, label_id, tag_meta)
+        references.delete(field_value, image_info, references.label_by_id[label_id])
+    references.refresh_grid(userId, field_value)
+
+
 def main():
     ag.init()
 
