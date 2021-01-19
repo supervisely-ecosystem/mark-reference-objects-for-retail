@@ -49,6 +49,8 @@ def index_existing():
             #break  # @TODO: for debug
         #break  # @TODO: for debug
 
+    sly.Progress("App is ready", 1, ext_logger=ag.app.logger).iter_done_report()
+
 
 def add(field_value, image_info, label):
     global count, modify_lock
