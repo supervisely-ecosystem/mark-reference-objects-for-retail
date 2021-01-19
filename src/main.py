@@ -12,6 +12,10 @@ from tagging import assign, delete
 def event_next_image(api: sly.Api, task_id, context, state, app_logger):
     user_id = context["userId"]
     cur_image_id = context["imageId"]
+    if cur_image_id is None:
+        app_logger.warn("Image Changed event with wrong context", extra={"ui_context": context})
+        return
+
     cur_image_info = api.image.get_info_by_id(cur_image_id)
     field = cur_image_info.meta.get(ag.field_name, None)
 
