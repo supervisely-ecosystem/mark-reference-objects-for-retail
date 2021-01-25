@@ -106,6 +106,7 @@ def main():
     data["targetProject"] = {"id": ag.project.id, "name": ag.project.name}
     data["currentMeta"] = {}
     data["fieldName"] = ag.field_name
+    data["productsWithRefCount"] = 0
 
     state = {}
     state["selectedTab"] = "product"

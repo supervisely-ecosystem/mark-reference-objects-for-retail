@@ -99,7 +99,7 @@
                             <b style="color: #777777;">{{k}}</b>: {{v}}
                         </div>
                         <div class="mt10" style="color: green; font-weight: 500;">
-                            REFERENCES (found / total): {{data.user[context.userId].refCount}} /
+                            REFERENCES (found on image / total objects): {{data.user[context.userId].refCount}} /
                             {{data.user[context.userId].totalRefCount}}
                         </div>
 
@@ -126,6 +126,9 @@
             </el-tab-pane>
             <el-tab-pane label="CATALOG" name="catalog" class="ml5">
                 <span slot="label"><i class="zmdi zmdi-view-list-alt"></i> CATALOG</span>
+                <div style="color: green; font-weight: 500;">
+                    {{data.productsWithRefCount}} PRODUCTS IN CATALOG OUT OF {{data.catalog.data.length}} HAVE REFERENCES
+                </div>
                 <sly-table id="small_table"
                            :options="{perPage: 10, pageSizes: [5, 10, 20, 50, 100]}"
                            :content="data.catalog"

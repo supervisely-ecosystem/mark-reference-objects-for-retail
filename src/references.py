@@ -126,4 +126,4 @@ def refresh_grid(user_id, field_value):
     }
     ag.api.app.set_field(ag.task_id, f"data.user.{user_id}", fields, append=True)
     ag.api.app.set_field(ag.task_id, f"state.user.{user_id}.cardsCheckboxes", cards_checkboxes)
-
+    ag.api.app.set_field(ag.task_id, "data.productsWithRefCount", len(data))
