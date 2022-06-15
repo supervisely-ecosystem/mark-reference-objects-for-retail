@@ -2,8 +2,8 @@
   "name": "Mark Reference Objects for Retail",
   "type": "app",
   "categories": [
-    "retail",
-    "reference items"
+    "images",
+    "labeling"
   ],
   "description": "Prepare examples for products from catalog",
   "docker_image": "supervisely/base-py-sdk:6.1.46",
@@ -29,10 +29,14 @@
   "task_location": "workspace_tasks",
   "isolate": true,
   "headless": true,
-  "integrated_into": ["image_annotation_tool"],
+  "integrated_into": [
+    "image_annotation_tool"
+  ],
   "icon": "https://img.icons8.com/color/96/000000/ingredients.png",
   "icon_background": "#FFFFFF",
   "context_menu": {
-    "target": ["images_project"]
+    "target": [
+      "images_project"
+    ]
   }
 }
