@@ -1,42 +1,42 @@
 {
-  "name": "Mark Reference Objects for Retail",
-  "type": "app",
-  "categories": [
-    "images",
-    "labeling"
-  ],
-  "description": "Prepare examples for products from catalog",
-  "docker_image": "supervisely/base-py-sdk:6.35.0",
-  "main_script": "src/main.py",
-  "gui_template": "src/gui.html",
-  "modal_template": "src/modal.html",
-  "modal_template_state": {
-    "catalogPath": "",
-    "fieldName": "",
-    "columnName": "",
-    "targetClassName": "",
-    "referenceTagName": "",
-    "multiselectClassName": ""
-  },
-  "debug_modal_template_state": {
-    "catalogPath": "/retail/snacks_catalog.csv",
-    "fieldName": " UPC",
-    "columnName": "UPC CODE",
-    "targetClassName": "",
-    "referenceTagName": "",
-    "multiselectClassName": ""
-  },
-  "task_location": "workspace_tasks",
-  "isolate": true,
-  "headless": true,
-  "integrated_into": [
-    "image_annotation_tool"
-  ],
-  "icon": "https://img.icons8.com/color/96/000000/ingredients.png",
-  "icon_background": "#FFFFFF",
-  "context_menu": {
-    "target": [
-      "images_project"
-    ]
-  }
+    "name": "Mark Reference Objects for Retail",
+    "type": "app",
+    "categories": [
+        "images",
+        "labeling"
+    ],
+    "description": "Prepare examples for products from catalog",
+    "docker_image": "supervisely/labeling:0.0.1",
+    "main_script": "src/main.py",
+    "gui_template": "src/gui.html",
+    "modal_template": "src/modal.html",
+    "modal_template_state": {
+        "catalogPath": "",
+        "fieldName": "",
+        "columnName": "",
+        "targetClassName": "",
+        "referenceTagName": "",
+        "multiselectClassName": ""
+    },
+    "debug_modal_template_state": {
+        "catalogPath": "/retail/snacks_catalog.csv",
+        "fieldName": " UPC",
+        "columnName": "UPC CODE",
+        "targetClassName": "",
+        "referenceTagName": "",
+        "multiselectClassName": ""
+    },
+    "task_location": "workspace_tasks",
+    "isolate": true,
+    "headless": true,
+    "integrated_into": [
+        "image_annotation_tool"
+    ],
+    "icon": "https://img.icons8.com/color/96/000000/ingredients.png",
+    "icon_background": "#FFFFFF",
+    "context_menu": {
+        "target": [
+            "images_project"
+        ]
+    }
 }
