@@ -1,6 +1,6 @@
 from collections import defaultdict
 import threading
-import supervisely_lib as sly
+import supervisely as sly
 import globals as ag
 
 data = defaultdict(lambda: defaultdict(set))

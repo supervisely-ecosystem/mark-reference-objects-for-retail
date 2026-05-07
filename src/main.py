@@ -1,5 +1,5 @@
 import json
-import supervisely_lib as sly
+import supervisely as sly
 
 import globals as ag  # application globals
 import catalog
